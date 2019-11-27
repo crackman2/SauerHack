@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 1688
+  Left = 2477
   Height = 339
-  Top = 342
+  Top = 462
   Width = 400
   BorderStyle = bsSingle
   Caption = 'SauerHack'
@@ -541,6 +541,7 @@ object Form1: TForm1
     0000000000000000000000000000000000000000000000000000000000000000
     0000
   }
+  OnCreate = FormCreate
   LCLVersion = '2.0.6.0'
   object LogBox: TListBox
     Left = 8
@@ -559,5 +560,11 @@ object Form1: TForm1
     Caption = 'Initialize'
     OnClick = btnInitClick
     TabOrder = 1
+  end
+  object TimerFly: TTimer
+    Interval = 1
+    OnTimer = TimerFlyTimer
+    left = 16
+    top = 16
   end
 end
