@@ -5,7 +5,7 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,JwaTlHelp32, jwapsapi,
   Windows;
 
 type
@@ -166,21 +166,23 @@ begin
     Log('Flying enabled');
     FirstFly := True;
     EnableFly := True;
-    WriteByte($1434F94, $90); //Disable function which sets POSZ
-    WriteByte($1434F95, $90);
-    WriteByte($1434F96, $90);
+    WriteByte($4188DD, $90); //Disable Posx and Posy
+    WriteByte($4188DE, $90); //
+    WriteByte($4188DF, $90);
+    WriteByte($4188E0, $90);
+    WriteByte($4188E1, $90);
 
-    WriteByte($3D4F8E, $90); //Disable Posx
-    WriteByte($3D4F8F, $90);
-    WriteByte($3D4F90, $90);
+  //  WriteByte($3D4F8E, $90); //Disable Posx
+  //  WriteByte($3D4F8F, $90);
+  //  WriteByte($3D4F90, $90);
 
-    WriteByte($3D4F91, $90); //Disable Posy
-    WriteByte($3D4F92, $90);
-    WriteByte($3D4F93, $90);
+   // WriteByte($3D4F91, $90); //Disable Posy
+   // WriteByte($3D4F92, $90);
+   // WriteByte($3D4F93, $90);
 
-    WriteByte($3D4F94, $90); //Disable Posz again
-    WriteByte($3D4F95, $90);
-    WriteByte($3D4F96, $90);
+    WriteByte($4188E2, $90); //Disable Posz again
+    WriteByte($4188E3, $90);
+    WriteByte($4188E4, $90);
 
 
 
@@ -196,25 +198,27 @@ begin
   begin
     Log('Flying disabled');
     EnableFly := False;
-    WriteByte($1434F94, $89); //enable function which sets POSZ
-    WriteByte($1434F95, $46);
-    WriteByte($1434F96, $38);
+    WriteByte($4188DD, $66); //Disable Posx and Posy
+    WriteByte($4188DE, $0F); //
+    WriteByte($4188DF, $D6);
+    WriteByte($4188E0, $46);
+    WriteByte($4188E1, $30);
 
-    WriteByte($3D4F8E, $89); //Disable Posx
-    WriteByte($3D4F8F, $4E);
-    WriteByte($3D4F90, $30);
+   // WriteByte($3D4F8E, $89); //Disable Posx
+   // WriteByte($3D4F8F, $4E);
+   // WriteByte($3D4F90, $30);
 
-    WriteByte($3D4F91, $89); //Disable Posy
-    WriteByte($3D4F92, $56);
-    WriteByte($3D4F93, $34);
+   // WriteByte($3D4F91, $89); //Disable Posy
+   // WriteByte($3D4F92, $56);
+   // WriteByte($3D4F93, $34);
 
-    WriteByte($3D4F94, $89); //Disable Posz again
-    WriteByte($3D4F95, $46);
-    WriteByte($3D4F96, $38);
+    WriteByte($4188E2, $89); //Disable Posz again
+    WriteByte($4188E3, $46);
+    WriteByte($4188E4, $38);
 
-    WriteByte($462649, $D9); //enable falling physics
-    WriteByte($46264A, $5F);        //BROKEN
-    WriteByte($46264B, $20);
+   // WriteByte($462649, $D9); //enable falling physics
+    //WriteByte($46264A, $5F);        //BROKEN
+    //WriteByte($46264B, $20);
     while (GetAsyncKeyState(VK_V) <> 0) do
     begin
       Sleep(50);
@@ -223,10 +227,43 @@ begin
 
 end;
 
+function GetModuleBaseAddress(ProcessID: Cardinal; MName: String): Pointer;
+    var
+      Modules         : Array of HMODULE;
+      cbNeeded, i     : Cardinal;
+      ModuleInfo      : TModuleInfo;
+      ModuleName      : Array[0..MAX_PATH] of Char;
+      PHandle         : THandle;
+    begin
+      Result := nil;
+      SetLength(Modules, 1024);
+      PHandle := OpenProcess(PROCESS_QUERY_INFORMATION + PROCESS_VM_READ, False, ProcessID);
+      if (PHandle <> 0) then
+      begin
+        EnumProcessModules(PHandle, @Modules[0], 1024 * SizeOf(HMODULE), cbNeeded); //Getting the enumeration of modules
+        SetLength(Modules, cbNeeded div SizeOf(HMODULE)); //Setting the number of modules
+        for i := 0 to Length(Modules) - 1 do //Start the loop
+        begin
+          GetModuleBaseName(PHandle, Modules[i], ModuleName, SizeOf(ModuleName)); //Getting the name of module
+          if AnsiCompareText(MName, ModuleName) = 0 then //If the module name matches with the name of module we are looking for...
+          begin
+            GetModuleInformation(PHandle, Modules[i], ModuleInfo, SizeOf(ModuleInfo)); //Get the information of module
+            Result := ModuleInfo.lpBaseOfDll; //Return the information we want (The image base address)
+            CloseHandle(PHandle);
+            Exit;
+          end;
+        end;
+      end;
+    end;
+
+
+
+
 procedure TForm1.btnInitClick(Sender: TObject);
 var
   hWindow: HWND;
   Base: DWORD;
+  EXEBase:DWORD;
 begin
   Log('Initializing...');
   hWindow := FindWindow(nil, 'Cube 2: Sauerbraten');
@@ -237,7 +274,9 @@ begin
   if (hProcess <> 0) then
   begin
     Log('Sauerbraten found!');
-    ReadProcessMemory(hProcess, Pointer($320000 + $1E6C20), @Base,
+    EXEBase:=DWORD(GetModuleBaseAddress(ProcId,'sauerbraten.exe'));
+    Log('Sauebraten.exe base address: ' + IntToHex(EXEBase,6));
+    ReadProcessMemory(hProcess, Pointer(EXEBase + $00216454), @Base,
       SizeOf(addposx), nil);
     Log('Base read: ' + IntToHex(Base, 6));
     addposx := Base + $30;
