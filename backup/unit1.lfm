@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 2341
+  Left = 2763
   Height = 339
-  Top = 222
+  Top = 230
   Width = 400
   BorderStyle = bsSingle
   Caption = 'SauerHack'
@@ -560,6 +560,15 @@ object Form1: TForm1
     Caption = 'Initialize'
     OnClick = btnInitClick
     TabOrder = 1
+  end
+  object btnOpenGL: TButton
+    Left = 264
+    Height = 39
+    Top = 296
+    Width = 126
+    Caption = 'OpenGL stuff'
+    OnClick = btnOpenGLClick
+    TabOrder = 2
   end
   object TimerFly: TTimer
     Interval = 1
