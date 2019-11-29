@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 2862
+  Left = 2341
   Height = 339
-  Top = 462
+  Top = 222
   Width = 400
   BorderStyle = bsSingle
   Caption = 'SauerHack'
@@ -545,8 +545,8 @@ object Form1: TForm1
   LCLVersion = '2.0.6.0'
   object LogBox: TListBox
     Left = 8
-    Height = 220
-    Top = 72
+    Height = 212
+    Top = 80
     Width = 384
     ItemHeight = 0
     OnClick = LogBoxClick
@@ -565,6 +565,12 @@ object Form1: TForm1
     Interval = 1
     OnTimer = TimerFlyTimer
     left = 16
+    top = 16
+  end
+  object Triggerbot: TTimer
+    Interval = 1
+    OnTimer = TriggerbotTimer
+    left = 104
     top = 16
   end
 end
