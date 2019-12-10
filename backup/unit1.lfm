@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 2763
+  Left = 1750
   Height = 339
-  Top = 230
+  Top = 244
   Width = 400
   BorderStyle = bsSingle
   Caption = 'SauerHack'

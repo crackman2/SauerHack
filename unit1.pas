@@ -60,6 +60,7 @@ var
   hProcess: HANDLE = 0;
   ProcId: DWORD = 0;
   hWindow: HWND;
+  dc:HDC= 0;
 
 implementation
 
@@ -346,6 +347,39 @@ begin
   end;
 end;
 
+function InjectDLL(const DLLPath: string; const PID: DWORD): Boolean;
+var
+  hProcess: THandle;
+  hThread: THandle;
+  BaseAddress: Pointer;
+  Size: Cardinal;
+  ThreadID: DWORD;
+begin
+  Result := False;
+  //open the process object
+  hProcess := OpenProcess(PROCESS_ALL_ACCESS, False, PID);
+  if (hProcess <> 0) then
+  begin
+    //allocate memory within the virtual address space of the specified process
+    BaseAddress := VirtualAllocEx(hProcess, nil, Length(DllPath) + 1, MEM_COMMIT, PAGE_READWRITE );
+    if BaseAddress <> nil then
+    begin
+      //write the data to process memory
+       WriteProcessMemory(hProcess, BaseAddress, PChar(DllPath), Length(DllPath) + 1, Size);
+       if Length(DLLPath) + 1 = Size then
+       begin
+         Log('Injection Completed');
+         //create remote thread
+         hThread := CreateRemoteThread(hProcess, nil, 0, GetProcAddress(LoadLibrary('kernel32.dll'), 'LoadLibraryA' ), BaseAddress, 0, ThreadID);
+         Result := hThread <> 0;
+         WaitForSingleObject(hThread, INFINITE);
+       end;
+       VirtualFreeEx(hProcess, BaseAddress, 0, MEM_RELEASE);
+     end;
+     CloseHandle(hProcess);
+  end;
+end;
+
 
 
 
@@ -356,6 +390,7 @@ var
   EXEBase: DWORD;
 begin
   Log('Initializing...');
+  dc:= GetDC(0);
   hWindow := FindWindow(nil, 'Cube 2: Sauerbraten');
   Log('Window Handle: ' + IntToStr(hWindow));
   GetWindowThreadProcessId(hWindow, @ProcId);
@@ -399,14 +434,31 @@ var
   OpenGlBase: DWORD = 0; //Found with GetModuleBase
   SwapBuffersOffset: DWORD = $45E21; //OPENGL32.dll+45e21
   SwapBuffers: DWORD = 0;
-  JumpToLocation: DWORD = $E90016; //Common code cave (Actually at 0x10300)
-  JumpBackFromLocation:DWORD = $E90016+9;
+  JumpToLocation: DWORD = $25521; //Codecave offset in Opengl32.dll
+  JumpBackFromLocation:DWORD = 14; //size of code injected
   JumpBytes:DWORD = 0;
   JumpBackBytes:DWORD=0;
+  DLLBase:DWORD=0;
+  DLLFunctionOffset:DWORD=$1A80; //$1570;
+  CallOffset:DWORD=0;
 begin
   //00
+  //Log('CurrentDir: ' + GetCurrentDir() + '\OGL\OGL.dll');   }
+  //InjectDLL(GetCurrentDir() + '\OGL\OGL.dll',ProcId);       } FOR LAZARUS DLL
+  //DLLBase:=DWORD(GetModuleBaseAddress(ProcId,'OGL.dll'));   }
+  //Log('OGL.dll Base: 0x' + inttohex(DLLBase,6));            }
+
+  Log('CurrentDir: ' + GetCurrentDir() + '\cppOGL\cppOGL\Release\cppOGL.dll');   //
+  InjectDLL(GetCurrentDir() + '\cppOGL\cppOGL\Release\cppOGL.dll',ProcId);       //FOR C++ DLL
+  DLLBase:=DWORD(GetModuleBaseAddress(ProcId,'cppOGL.dll'));                     //
+  Log('OGL.dll Base: 0x' + inttohex(DLLBase,6));                                 //
+
+
   Log('OpenGL stuff executing..');
   OpenGlBase := DWORD(GetModuleBaseAddress(ProcId, 'opengl32.dll'));
+  JumpToLocation:=OpenGlBase+JumpToLocation;//Opengl32.dll base + offset to codecave
+  JumpBackFromLocation:=JumpBackFromLocation+JumpToLocation; //positioning jumpback to original code
+
   Log('OpenGL.dll Base: 0x' + IntToHex(OpenGlBase, 6));
   SwapBuffers := OpenGlBase + SwapBuffersOffset;
   Log('SwapBuffers at 0x' + IntToHex(SwapBuffers, 6));
@@ -431,6 +483,7 @@ begin
   //-> ORIGINAL CODE
   //JMP back to below the original jump at SwapBuffers (Probably
   //WRITING THE JUMP SHOULD BE DONE LAST!
+  { iNSTRUCTIONS WERE COPIED TO THE END
   Log('Calculating jump offset...');
   JumpBytes:= (($100000000 + JumpToLocation)-5) - SwapBuffers; // Calculating jump offset
   Log('JumpBytes 0x' + IntToHex(JumpBytes, 6));
@@ -439,7 +492,7 @@ begin
   Log('Writing Jump...');
   WriteByte(SwapBuffers,$E9);
   WriteDWORD(SwapBuffers+1,JumpBytes);
-  Log('Done.');
+  Log('Done.'); }
 
   //The Jump back to Swapbuffer is
   //the address where the jump back is written (eg. 10309) +
@@ -455,23 +508,37 @@ begin
   Log('Writing into CodeCave (Example code)');
   WriteByte(JumpToLocation,$9C); //push fd
   WriteByte(JumpToLocation+1,$60); //push ad
-  WriteByte(JumpToLocation+2,$61); //pop  ad
-  WriteByte(JumpToLocation+3,$9D); //pop  fd
-  WriteByte(JumpToLocation+4,$8B); WriteByte(JumpToLocation+5,$FF); //mov edi,edi
-  WriteByte(JumpToLocation+6,$55); //push ebp
-  WriteByte(JumpToLocation+7,$8B); WriteByte(JumpToLocation+8,$EC); //mov ebp,esp
+  WriteByte(JumpToLocation+2,$E8); //Call
+  CallOffset:=($100000000 + DLLBase+DLLFunctionOffset) - (JumpToLocation+2) - 5;// +$F48 ;
+  Log('CallOffset: 0x' + IntToHex(CallOffset,8));
+  WriteDWORD(JumpToLocation+3  ,(CallOffset-$100000000)); //address of function
+  WriteByte(JumpToLocation+7,$61); //pop  ad
+  WriteByte(JumpToLocation+8,$9D); //pop  fd
+  WriteByte(JumpToLocation+9,$8B); WriteByte(JumpToLocation+10,$FF); //mov edi,edi
+  WriteByte(JumpToLocation+11,$55); //push ebp
+  WriteByte(JumpToLocation+12,$8B); WriteByte(JumpToLocation+13,$EC); //mov ebp,esp
   Log('Done.');
   Log('Writing JumpBackBytes...');
   WriteByte(JumpBackFromLocation,$E9);
   WriteDWORD(JumpBackFromLocation+1,JumpBackBytes);
   log('Done.');
+
+
+  //NOW! To-Do -> Write DLL and then in the codecave make a jump to it's function
+  //Good look!
+
+
+  Log('Calculating jump offset...');
+  JumpBytes:= (($100000000 + JumpToLocation)-5) - SwapBuffers; // Calculating jump offset
+  Log('JumpBytes 0x' + IntToHex(JumpBytes, 6));
+  //JumpBytes:=SwapEndian(JumpBytes); //swapping edian  // turns out this is not needed//writeprocessmemory is smart enough
+  Log('JumpBytes (Edian swapped) 0x' + IntToHex(JumpBytes, 6));
+  Log('Writing Jump...');
+  WriteByte(SwapBuffers,$E9);
+  WriteDWORD(SwapBuffers+1,JumpBytes);
+  Log('Done.');
+
   log('OpenGL stuff completed');
-
-
-
-
-
-
 end;
 
 procedure TForm1.CheckBoxFlyChange(Sender: TObject);
