@@ -3,7 +3,8 @@ library SHReloaded;
 {$mode objfpc}{$H+}
 
 uses
-  Classes, Swapbuffershook, Main, CPlayer, Aimbot, FunctionCaller, CESP, DrawText
+  Classes, Swapbuffershook, Main, CPlayer, Aimbot, FunctionCaller, CESP,
+  DrawText, CNoclip
   { you can add units after this };
 
 

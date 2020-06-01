@@ -92,8 +92,6 @@ var
   pFeet:RVec2;
   dHeight:Single;
   dWidth:Single;
-  TeamStr:array[0..4] of char = (Char(0),Char(0),Char(0),Char(0),Char(0));
-
 begin
   i:=1;
   while i <= plrcnt do
@@ -136,7 +134,7 @@ begin
 
              glxDrawString(pHead.x,pHead.y+(dHeight/4),PChar(en^[i].PlayerNameString),abs(dHeight/80),False);
              glDisable(GL_BLEND);
-              glDisable(GL_LINE_SMOOTH);
+             glDisable(GL_LINE_SMOOTH);
            end;
       end;
     end;

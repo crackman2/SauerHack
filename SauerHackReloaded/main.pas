@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Windows,gl,
   { my stuff}
-  CPlayer, Aimbot, FunctionCaller, CESP, DrawText;
+  CPlayer, Aimbot, FunctionCaller, CESP, DrawText, CTeleportAllEnemiesToYou, CNoclip;
 
 var
 { --------- Player Object -------- }
@@ -29,10 +29,23 @@ PlayerCount:Integer;
 esp:TESP;
 
 
+
+{ ---------- TATY Object ---------- }
+{ -> teleport everyone to you       }
+{ -> may cause death                }
+taty:TTeleAETY;
+
+{ --------- Noclip Object --------- }
+{ -> fly around                     }
+noclip:TNoclip;
+EnableNoclip:PByte;
+NoclipButtonPressed:PByte;
+
 { ---------- Lock Aim ---------- }
 LockAim:PByte;
 ReleasedRBM:PByte;
 CurrentBestTarget:Integer;
+
 
 
 procedure MainFunc();
@@ -61,6 +74,8 @@ begin
   Player.GetPlayerData();
   esp:=TESP.Create(@Player,@Enemy,PlayerCount);
   Aimer:=TAimbot.Create(@Player,@Enemy);
+  taty:=TTeleAETY.Create(@Player,@Enemy,PlayerCount);
+  noclip:=TNoclip.Create;
   i:=1;
   while (i <= PlayerCount) do
   begin
@@ -78,9 +93,12 @@ begin
   {    until the target is dead            }
   { -> stops aiming when the enemy is dead }
   { -> reclick hotkey to aim at next taget }
+  { -> this should really be its own       }
+  {    function....                        }
   LockAim:=PByte($103C0);
   ReleasedRBM:=PByte($103C8);
-  Aimer.ShootByte^:=$0;
+
+  if not (GetAsyncKeyState($1) <> 0) then Aimer.ShootByte^:=$0;
   if (GetAsyncKeyState($2) <> 0) then
   begin
     if ReleasedRBM^ = 1 then
@@ -105,6 +123,11 @@ begin
        end
        else
        begin
+          if GetAsyncKeyState(VK_P) <> 0 then
+          begin
+               MessageBox(0,PChar('Current Target: 0x' + IntToHex(DWORD(Enemy[CurrentBestTarget].PlayerBase),8)),'e',0);
+          end;
+
         Aimer.Aim(CurrentBestTarget);
         Aimer.AutoTrigger();
        end;
@@ -117,6 +140,37 @@ begin
   else
   begin
     LockAim^:= 0;
+  end;
+
+
+  { ------------ TATY ------------- }
+  if GetAsyncKeyState(VK_X) <> 0 then
+  begin
+    taty.TeleportAllEnemiesInfrontOfYou();
+  end;
+
+  { --------------- Noclip --------------- }
+  { -> lets you fly around the map         }
+  { -> toggles with 'V'                    }
+  EnableNoclip:=PByte($103D0);
+  NoclipButtonPressed:=PByte($103D8);
+  if (GetAsyncKeyState(VK_V) <> 0) and (NoclipButtonPressed^=0) and (EnableNoclip^=0) then begin
+    EnableNoclip^:=1;
+    NoclipButtonPressed^:=1;
+  end;
+
+  if (GetAsyncKeyState(VK_V) <> 0) and (NoclipButtonPressed^=0) and (EnableNoclip^=1) then begin
+    EnableNoclip^:=0;
+    NoclipButtonPressed^:=1;
+  end;
+
+  if (GetAsyncKeyState(VK_V) = 0) then NoclipButtonPressed^:=0;
+
+  if EnableNoclip^=1 then begin
+     noclip.PollControls;
+     noclip.NOPFalling(True);
+  end else begin
+     noclip.NOPFalling(False);
   end;
 
 
@@ -133,6 +187,8 @@ begin
   Aimer.Destroy;
   Player.Destroy;
   esp.Destroy;
+  taty.Destroy;
+  noclip.Destroy;
   i:=1;
   while (i <= PlayerCount) do
   begin
@@ -160,6 +216,8 @@ begin
   tmp:=PInteger(GetModuleHandle('sauerbraten.exe') + $29CD3C);
   PlayerCount:=tmp^-1;
 end;
+
+
 
 
 

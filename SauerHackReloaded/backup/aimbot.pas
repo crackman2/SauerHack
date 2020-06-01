@@ -226,7 +226,7 @@ begin
   begin
     dx:=en^[index].pos.x - ply^.pos.x;
     dy:=en^[index].pos.y - ply^.pos.y;
-    dz:=(en^[index].pos.z-3.0) - ply^.pos.z;
+    dz:=(en^[index].pos.z-1.5) - ply^.pos.z;
 
     dist:= sqrt(
            (dx*dx) +

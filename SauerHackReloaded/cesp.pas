@@ -92,8 +92,6 @@ var
   pFeet:RVec2;
   dHeight:Single;
   dWidth:Single;
-  TeamStr:array[0..4] of char = (Char(0),Char(0),Char(0),Char(0),Char(0));
-
 begin
   i:=1;
   while i <= plrcnt do
@@ -125,7 +123,7 @@ begin
              glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
              glEnable(GL_LINE_SMOOTH);
              glColor3f(1,0,0);
-             DrawBox(pHead.y,pHead.x - (dWidth/2),pFeet.y, pFeet.x + (dWidth/2)  ,abs(dHeight/80));
+             DrawBox(pHead.y,pHead.x - (dWidth/2),pFeet.y, pHead.x + (dWidth/2)  ,abs(dHeight/80));
              glColor3f(0,2,0);
 
 

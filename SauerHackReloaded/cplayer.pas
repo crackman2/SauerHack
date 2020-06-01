@@ -25,6 +25,7 @@ type
     procedure FindPlayerPointer; stdcall;
     procedure GetPlayerData;stdcall;
     procedure SetCamera(camH:Single; camV:Single);stdcall;
+    procedure SetPos(x:single;y:single;z:single);
     procedure CalibrateMouse;stdcall;
     constructor Create(TheIndex:Cardinal);
 
@@ -64,10 +65,7 @@ begin
   List:=PDWORD(EntityList^);
   PlayerBase:=PDWORD(PDWORD(List + Index * $1)^);
 
-  if GetAsyncKeyState(VK_P) <> 0 then
-  begin
-       MessageBox(0,PChar('Playerbase: 0x' + IntToHex(DWORD(PlayerBase),8)),'e',0);
-  end;
+
 
 end;
 
@@ -189,6 +187,13 @@ begin
   addPSingleCamV:=addCamV;
   addPSingleCamV^:=camV;
   addPSingleCamH^:=camH;
+end;
+
+procedure TPlayer.SetPos(x: single; y: single; z: single);
+begin
+  PSingle(PlayerBase + $0)^:=x;
+  PSingle(PlayerBase + $1)^:=y;
+  PSingle(PlayerBase + $2)^:=z;
 end;
 
 procedure TPlayer.CalibrateMouse; stdcall;

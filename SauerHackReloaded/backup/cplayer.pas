@@ -25,6 +25,7 @@ type
     procedure FindPlayerPointer; stdcall;
     procedure GetPlayerData;stdcall;
     procedure SetCamera(camH:Single; camV:Single);stdcall;
+    procedure SetPos(x:single;y:single;z:single);
     procedure CalibrateMouse;stdcall;
     constructor Create(TheIndex:Cardinal);
 
@@ -161,7 +162,7 @@ begin
          { -------- Read Spectating ------- }
          { -> relevant for target selection }
          { -> offset from playerbase = $7C }
-         if PBYTE(PlayerBase + ($7C/4))^ = $5 then IsSpectating:=true;
+         if PBYTE(PlayerBase + round($7C/4))^ = $5 then IsSpectating:=true;
     end; // Enemy Related Data
   end; // if Playerbase <> 0
 end;
@@ -189,6 +190,13 @@ begin
   addPSingleCamV:=addCamV;
   addPSingleCamV^:=camV;
   addPSingleCamH^:=camH;
+end;
+
+procedure TPlayer.SetPos(x: single; y: single; z: single);
+begin
+  PSingle(PlayerBase + $0)^:=x;
+  PSingle(PlayerBase + $1)^:=y;
+  PSingle(PlayerBase + $2)^:=z;
 end;
 
 procedure TPlayer.CalibrateMouse; stdcall;

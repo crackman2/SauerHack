@@ -203,11 +203,6 @@ begin
     end;
     inc(i);
   end;
-  if (GetAsyncKeyState(VK_Q) <> 0) and (BestTarget <> -1) then
-  MessageBox(0,PChar('BestTarget final: ' + inttostr(BestTarget) + LineEnding +
-                     'Position : ' + FloatToStr(en^[BestTarget].pos.x) + LineEnding + FloatToStr(en^[BestTarget].pos.y) + LineEnding + FloatToStr(en^[BestTarget].pos.z) + LineEnding +
-                     'Distance : ' + FloatToStr(distmin)
-  ),'e',0);
   Result:=BestTarget;
 end;
 
