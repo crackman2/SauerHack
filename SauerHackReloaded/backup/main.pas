@@ -14,6 +14,12 @@ var
 { -> read position & team          }
 { -> set camera angles             }
 Player:TPlayer;
+
+
+{ --------- Aimbot Object -------- }
+{ -> Target selection              }
+{ -> Aiming & auto trigger via     }
+{    color check                   }
 Aimer:TAimbot;
 
 
@@ -253,9 +259,9 @@ procedure ShowDebugMenu;
 begin
   glColor3f(0.8,0.8,0.8);
   glxDrawString(200,200,'::Debug Screen::',2,true);
-  glxDrawString(200,210,'posx: ' + IntToStr(round(Player.pos.x)),2,true);
-  glxDrawString(200,220,'posy: ' + IntToStr(round(Player.pos.y)),2,true);
-  glxDrawString(200,230,'posz: ' + IntToStr(round(Player.pos.z)),2,true);
+  glxDrawString(200,215,'posx: ' + IntToStr(round(Player.pos.x)),2,true);
+  glxDrawString(200,230,'posy: ' + IntToStr(round(Player.pos.y)),2,true);
+  glxDrawString(200,245,'posz: ' + IntToStr(round(Player.pos.z)),2,true);
 end;
 
 

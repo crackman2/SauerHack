@@ -10,7 +10,7 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="SHReloaded"/>
         <CursorPos X="28" Y="8"/>
-        <UsageCount Value="82"/>
+        <UsageCount Value="87"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
@@ -20,7 +20,7 @@
         <EditorIndex Value="1"/>
         <TopLine Value="57"/>
         <CursorPos X="27" Y="73"/>
-        <UsageCount Value="82"/>
+        <UsageCount Value="87"/>
         <Loaded Value="True"/>
       </Unit1>
       <Unit2>
@@ -30,7 +30,7 @@
         <EditorIndex Value="2"/>
         <TopLine Value="236"/>
         <CursorPos X="24" Y="258"/>
-        <UsageCount Value="82"/>
+        <UsageCount Value="87"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -39,7 +39,7 @@
         <UnitName Value="CPlayer"/>
         <EditorIndex Value="9"/>
         <CursorPos X="14" Y="10"/>
-        <UsageCount Value="82"/>
+        <UsageCount Value="87"/>
         <Loaded Value="True"/>
       </Unit3>
       <Unit4>
@@ -49,7 +49,7 @@
         <EditorIndex Value="7"/>
         <TopLine Value="234"/>
         <CursorPos X="30" Y="256"/>
-        <UsageCount Value="82"/>
+        <UsageCount Value="87"/>
         <Loaded Value="True"/>
       </Unit4>
       <Unit5>
@@ -58,7 +58,7 @@
         <UnitName Value="FunctionCaller"/>
         <EditorIndex Value="8"/>
         <CursorPos X="33" Y="8"/>
-        <UsageCount Value="82"/>
+        <UsageCount Value="87"/>
         <Loaded Value="True"/>
       </Unit5>
       <Unit6>
@@ -67,9 +67,9 @@
         <UnitName Value="CESP"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="3"/>
-        <TopLine Value="96"/>
-        <CursorPos X="25" Y="113"/>
-        <UsageCount Value="82"/>
+        <TopLine Value="238"/>
+        <CursorPos X="18" Y="217"/>
+        <UsageCount Value="87"/>
         <Loaded Value="True"/>
       </Unit6>
       <Unit7>
@@ -79,7 +79,7 @@
         <EditorIndex Value="6"/>
         <TopLine Value="334"/>
         <CursorPos X="47" Y="407"/>
-        <UsageCount Value="82"/>
+        <UsageCount Value="87"/>
         <Loaded Value="True"/>
       </Unit7>
       <Unit8>
@@ -88,7 +88,7 @@
         <UnitName Value="CTeleportAllEnemiesToYou"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="7"/>
-        <UsageCount Value="77"/>
+        <UsageCount Value="82"/>
       </Unit8>
       <Unit9>
         <Filename Value="cnoclip.pas"/>
@@ -97,7 +97,7 @@
         <EditorIndex Value="5"/>
         <TopLine Value="65"/>
         <CursorPos X="31" Y="112"/>
-        <UsageCount Value="49"/>
+        <UsageCount Value="54"/>
         <Loaded Value="True"/>
       </Unit9>
       <Unit10>
@@ -106,7 +106,7 @@
         <EditorIndex Value="4"/>
         <TopLine Value="58"/>
         <CursorPos X="3" Y="66"/>
-        <UsageCount Value="38"/>
+        <UsageCount Value="41"/>
         <Loaded Value="True"/>
       </Unit10>
       <Unit11>
@@ -116,7 +116,7 @@
         <EditorIndex Value="10"/>
         <TopLine Value="5"/>
         <CursorPos X="7" Y="26"/>
-        <UsageCount Value="34"/>
+        <UsageCount Value="40"/>
         <Loaded Value="True"/>
       </Unit11>
     </Units>

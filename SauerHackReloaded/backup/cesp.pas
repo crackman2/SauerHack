@@ -77,7 +77,7 @@ var
   pHead:RVec2;
   pFeet:RVec2;
   dHeight:Single;
-  dWidth:Single;
+  //dWidth:Single;
 begin
   i:=1;
   while i <= plrcnt do
@@ -97,13 +97,13 @@ begin
 
              PosToCheck.x:=en^[i].pos.x;
              PosToCheck.y:=en^[i].pos.y;
-             PosToCheck.z:=en^[i].pos.z-18;
+             PosToCheck.z:=en^[i].pos.z-15;
              glW2S(PosToCheck);
              pFeet.x:=scrcord.x;
              pFeet.y:=scrcord.y;
 
              dHeight:=pHead.y-pFeet.y;
-             dWidth:=dHeight/2;
+             //dWidth:=dHeight/2;
 
              glEnable(GL_BLEND);
              glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -111,10 +111,10 @@ begin
              glColor3f(1,0,0);
              //DrawBox(pHead.y,pHead.x - (dWidth/2),pFeet.y, pHead.x + (dWidth/2)  ,abs(dHeight/80));
              Draw3DBox(i,abs(dHeight/80));
-             glColor3f(0,2,0);
+             //glColor3f(0,2,0);
 
 
-             DrawLine(pHead.x - (dWidth/2) + 4,pFeet.y, pHead.x - (dWidth/2) + 4, pHead.y - (((1.0 - (en^[i].hp / 100.0))*dheight)),abs(dHeight/80));
+             //DrawLine(pHead.x - (dWidth/2) + 4,pFeet.y, pHead.x - (dWidth/2) + 4, pHead.y - (((1.0 - (en^[i].hp / 100.0))*dheight)),abs(dHeight/80));
 
 
              glColor3f(0.8,0.8,0.8);
@@ -147,6 +147,9 @@ var
   FSW:RVec3;
   FSE:RVec3;
 
+  { --- 3D HP Vector --- }
+  HealthBar:RVec3;
+
   { --- 2D Vars --- }
   sHNE:RVec2;
   sHNW:RVec2;
@@ -157,6 +160,9 @@ var
   sFNW:RVec2;
   sFSW:RVec2;
   sFSE:RVec2;
+
+  { --- 2D HP Vector --- }
+  sHealthBar:RVec2;
 
   { --- Box Width --- }
   bw:Single=3.75;
@@ -169,7 +175,9 @@ begin
   Head3D:=en^[Index].pos;
   Feet3D:=en^[Index].pos;
   Feet3D.z-=15;
-  Head3d.z+=2;
+  Head3D.z+=2;
+  HealthBar:=Head3D;
+  HealthBar.z:=Head3D.z - (((1.0 - (en^[Index].hp / 100.0))*(Head3D.z-Feet3D.z)));
 
   { --- Head Vertices --- }
   HNE:=Head3D;
@@ -205,6 +213,12 @@ begin
   FSE.x+=bw;
   FSE.y-=bw;
 
+  { --- Health Vertex --- }
+  HealthBar.x-=bw;
+  HealthBar.y+=bw;
+
+
+
   { --- Projecting --- }
   { -> Head            }
   if not glW2S(HNE) then bFailed:=True else sHNE:=scrcord;
@@ -217,6 +231,9 @@ begin
   if not glW2S(FNW) then bFailed:=True else sFNW:=scrcord;
   if not glW2S(FSW) then bFailed:=True else sFSW:=scrcord;
   if not glW2S(FSE) then bFailed:=True else sFSE:=scrcord;
+
+  { -> HealthBar }
+  if not glW2S(HealthBar) then bFailed:=True else sHealthBar:=scrcord;
 
   { --- Drawing --- }
   if not bFailed then begin
@@ -241,6 +258,8 @@ begin
     DrawLine(sHSE.x,sHSE.y,sFSE.x,sFSE.y,lw); //South East Line
     DrawLine(sHSW.x,sHSW.y,sFSW.x,sFSW.y,lw); //South West Line
     DrawLine(sHNW.x,sHNW.y,sFNW.x,sFNW.y,lw); //North West Line
+    glColor3f(0,0.8,0);
+    DrawLine(sHealthBar.x,sHealthBar.y,sFNW.x,sFNW.y,lw*2); //HealthBar
   end;
 end;
 
