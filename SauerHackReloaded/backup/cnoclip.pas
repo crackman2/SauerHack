@@ -58,15 +58,6 @@ begin
   posy:=addposy;
   posz:=addposz;
 
-  {
-  if GetAsyncKeyState(VK_O) <> 0 then begin
-  MessageBox(0,PChar('addposx: ' + IntToHex(Cardinal(addposx),8) + LineEnding +
-                     'addposy: ' + IntToHex(Cardinal(addposy),8) + LineEnding +
-                     'addposz: ' + IntToHex(Cardinal(addposz),8) + LineEnding +
-                     'addcamx: ' + IntToHex(Cardinal(addcamx),8) + LineEnding +
-                     'addcamy: ' + IntToHex(Cardinal(addcamy),8) + LineEnding),'e',0);
-  end;
-  }
   { -------- Init Variables -------- }
   FPS:=Pointer(GetModuleHandle('sauerbraten.exe') + $2A0710);
   SpeedNormal:=200/PInteger(FPS)^;
@@ -80,13 +71,6 @@ var
     viewp:array [0..3] of Glint;
     ResetFallSpeed:Pointer;
 begin
-  //glxDrawString(200,320,'Polling Controls',2,true);
-  //glxDrawString(200,360,'posx: ' + IntToStr(round(posx^)),2,true);
-  //glxDrawString(200,380,'posy: ' + IntToStr(round(posy^)),2,true);
-  //glxDrawString(200,400,'posz: ' + IntToStr(round(posz^)),2,true);
-  //glxDrawString(200,420,'camx: ' + IntToStr(round(camx^)),2,true);
-  //glxDrawString(200,440,'camy: ' + IntToStr(round(camy^)),2,true);
-  //glxDrawString(200,460,'Speed: ' + IntToStr(round(SpeedCurrent)),2,true);
   if GetAsyncKeyState(VK_LSHIFT) <> 0 then SpeedCurrent:=SpeedFast;
   if GetAsyncKeyState(VK_LCONTROL) <> 0 then SpeedCurrent:=SpeedSlow;
   if GetAsyncKeyState(VK_W) <> 0 then MovePlayer('W');
@@ -96,7 +80,7 @@ begin
   if GetAsyncKeyState(VK_SPACE) <> 0 then MovePlayer('U');
 
 
-  ResetFallSpeed:=Pointer(Pointer(GetModuleHandle('sauerbraten.exe') + $216454)^) + $20);
+  ResetFallSpeed:=Pointer(PCardinal(GetModuleHandle('sauerbraten.exe') + $216454)^ + $20);
   PSingle(ResetFallSpeed)^:=0;
   glColor3f(0.8,0.8,0.8);
   glGetIntegerv(GL_VIEWPORT,viewp);

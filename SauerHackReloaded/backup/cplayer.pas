@@ -5,18 +5,10 @@ unit CPlayer;
 interface
 
 uses
-  Classes, SysUtils, Windows;
-type
-  RVec3 = record
-    x:Single;
-    y:Single;
-    z:Single;
-  end;
+  Classes, SysUtils, Windows,
 
-  RVec2i = record
-    x:Integer;
-    y:Integer
-  end;
+  CustomTypes;
+type
 
   { TPlayer }
   { This class is for both enemies and the localplayer }
@@ -36,10 +28,14 @@ type
     PlayerNameString:array[0..99] of Char;
     PlayerNameStringLength:Integer;
 
-    PlayerBase:Pointer; //Pointer to Player
+    PlayerBase:Pointer; {-> Pointer to Player //!! IMPORTANT !! Pointers must be of  }
+                        {   type Pointer or else adding offsets breaks for some      }
+                        {   reason :( Cast Type when dereferencing                   }
+                        {   (e.g. PByte(VarHoldingPointerValue)^:=$100;)             }
+
     Index:Cardinal;    //Position in EntityList (0 is localplayer)
     hp:Integer;        //Health
-    ClientNumber:DWORD; //ClientNumber (CN)
+    ClientNumber:DWORD; //ClientNumber (CN) (unused)
     IsSpectating:Boolean;
     BaseAddress:Pointer;
 

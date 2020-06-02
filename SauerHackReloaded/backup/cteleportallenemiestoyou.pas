@@ -41,6 +41,10 @@ begin
   plrcnt:=PlayerCount;
 end;
 
+
+{ ------------ TeleportAllEnemiesInfrontOfYou ------------ }
+{ -> uses the aimbot target selection to teleport all      }
+{    enemies (or something.. definitly not the hitbox :(   }
 procedure TTeleAETY.TeleportAllEnemiesInfrontOfYou(); stdcall;
 var
   i:Cardinal;

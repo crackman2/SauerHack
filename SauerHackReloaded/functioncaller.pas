@@ -5,18 +5,21 @@ unit FunctionCaller;
 interface
 
 uses
-  Classes, SysUtils,windows;
+  Classes, SysUtils, Windows;
 
 type
-  TPrintf = procedure (PMsg:PChar);stdcall;
+  TPrintf = procedure(PMsg: PChar); stdcall;
   PTPrintf = ^TPrintf;
 
   { TFuncCall }
+  { -> the printf thing is not functional but is a good example for }
+  {    calling exported (or not exported functions from the game    }
+  { -> maybe finds some use later                                   }
 
   TFuncCall = class
-    Constructor Create;
-    public
-      dbglog:TPrintf;
+    constructor Create;
+  public
+    dbglog: TPrintf;
 
   end;
 
@@ -25,11 +28,11 @@ implementation
 { TFuncCall }
 
 constructor TFuncCall.Create;
-var Sauerbase:Pointer;
+var
+  Sauerbase: Pointer;
 begin
-  Sauerbase:=Pointer(GetModuleHandle('sauerbraten.exe') + $2C0B0);
-  dbglog:=TPrintf(Sauerbase);
+  Sauerbase := Pointer(GetModuleHandle('sauerbraten.exe') + $2C0B0);
+  dbglog := TPrintf(Sauerbase);
 end;
 
 end.
-

@@ -7,6 +7,8 @@ interface
 uses
   Classes, SysUtils;
 
+
+
 type
   RVec3 = record
     x:Single;
@@ -23,11 +25,6 @@ type
     y:single;
     z:single;
     w:single;
-  end;
-  RVec3 = record
-    x:single;
-    y:single;
-    z:single;
   end;
   RVec2 = record
     x:single;

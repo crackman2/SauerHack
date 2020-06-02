@@ -253,7 +253,7 @@ begin
   glGetIntegerv(GL_VIEWPORT, viewp);
   glReadPixels(round(viewp[2]/2),round(viewp[3]/2),1,1,GL_RGB,GL_UNSIGNED_BYTE,@pixel[0]);
 
-
+  PInteger(Fog)^:=1569325055;
   if (pixel[0] = $0) and (pixel[1] = $FF) and (pixel[2] = $02) then
   begin
     ShootByte^:=$1;

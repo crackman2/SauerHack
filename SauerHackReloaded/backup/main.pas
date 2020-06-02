@@ -252,7 +252,7 @@ var
    tmp:PInteger;
 begin
   tmp:=PInteger(GetModuleHandle('sauerbraten.exe') + $29CD3C);
-  PlayerCount:=tmp^-1;
+  PlayerCount:=tmp^-1; //not counting local player
 end;
 
 procedure ShowDebugMenu;

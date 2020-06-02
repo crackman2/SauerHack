@@ -7,6 +7,11 @@ interface
 uses
   Classes, SysUtils;
 
+{ --- Custom Types --- }
+{ -> commonly used     }
+{    types should get  }
+{    their own unit    }
+
 type
   RVec3 = record
     x:Single;
