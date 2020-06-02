@@ -7,25 +7,10 @@ interface
 uses
   Classes, SysUtils, gl, glu,windows,
 
-  CPlayer, DrawText;
+  CPlayer, DrawText, CustomTypes;
 
 type
-   MVPmatrix = array[0..15] of single;
-   RVec4 = record
-    x:single;
-    y:single;
-    z:single;
-    w:single;
-  end;
-  RVec3 = record
-    x:single;
-    y:single;
-    z:single;
-  end;
-  RVec2 = record
-    x:single;
-    y:single;
-  end;
+
 
   { TESP }
   TEnArr = array[1..32] of TPlayer;
@@ -38,6 +23,7 @@ type
     function glW2S( plypos: RVec3): Boolean; stdcall;
     procedure DrawESP();stdcall;
     function IsTeamBased(): Boolean; stdcall;
+    procedure Draw3DBox(Index:Cardinal; lw:Single);stdcall;
 
     public
       ply:PTPlayer;
@@ -123,7 +109,8 @@ begin
              glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
              glEnable(GL_LINE_SMOOTH);
              glColor3f(1,0,0);
-             DrawBox(pHead.y,pHead.x - (dWidth/2),pFeet.y, pFeet.x + (dWidth/2)  ,abs(dHeight/80));
+             //DrawBox(pHead.y,pHead.x - (dWidth/2),pFeet.y, pHead.x + (dWidth/2)  ,abs(dHeight/80));
+             Draw3DBox(i,abs(dHeight/80));
              glColor3f(0,2,0);
 
 
@@ -143,6 +130,122 @@ begin
   end;
 
 end;
+
+
+procedure TESP.Draw3DBox(Index: Cardinal; lw:Single); stdcall;
+var
+  { --- 3D Vars --- }
+  Head3D:RVec3;
+  HNE:RVec3;
+  HNW:RVec3;
+  HSW:RVec3;
+  HSE:RVec3;
+
+  Feet3D:RVec3;
+  FNE:RVec3;
+  FNW:RVec3;
+  FSW:RVec3;
+  FSE:RVec3;
+
+  { --- 2D Vars --- }
+  sHNE:RVec2;
+  sHNW:RVec2;
+  sHSW:RVec2;
+  sHSE:RVec2;
+
+  sFNE:RVec2;
+  sFNW:RVec2;
+  sFSW:RVec2;
+  sFSE:RVec2;
+
+  { --- Box Width --- }
+  bw:Single=3.75;
+
+
+
+  bFailed:Boolean=False;
+begin
+
+  Head3D:=en^[Index].pos;
+  Feet3D:=en^[Index].pos;
+  Feet3D.z-=15;
+  Head3d.z+=2;
+
+  { --- Head Vertices --- }
+  HNE:=Head3D;
+  HNE.x+=bw;
+  HNE.y+=bw;
+
+  HNW:=Head3D;
+  HNW.x-=bw;
+  HNW.y+=bw;
+
+  HSW:=Head3D;
+  HSW.x-=bw;
+  HSW.y-=bw;
+
+  HSE:=Head3D;
+  HSE.x+=bw;
+  HSE.y-=bw;
+
+  { --- Feet Vertices --- }
+  FNE:=Feet3D;
+  FNE.x+=bw;
+  FNE.y+=bw;
+
+  FNW:=Feet3D;
+  FNW.x-=bw;
+  FNW.y+=bw;
+
+  FSW:=Feet3D;
+  FSW.x-=bw;
+  FSW.y-=bw;
+
+  FSE:=Feet3D;
+  FSE.x+=bw;
+  FSE.y-=bw;
+
+  { --- Projecting --- }
+  { -> Head            }
+  if not glW2S(HNE) then bFailed:=True else sHNE:=scrcord;
+  if not glW2S(HNW) then bFailed:=True else sHNW:=scrcord;
+  if not glW2S(HSW) then bFailed:=True else sHSW:=scrcord;
+  if not glW2S(HSE) then bFailed:=True else sHSE:=scrcord;
+
+  { -> Feet }
+  if not glW2S(FNE) then bFailed:=True else sFNE:=scrcord;
+  if not glW2S(FNW) then bFailed:=True else sFNW:=scrcord;
+  if not glW2S(FSW) then bFailed:=True else sFSW:=scrcord;
+  if not glW2S(FSE) then bFailed:=True else sFSE:=scrcord;
+
+  { --- Drawing --- }
+  if not bFailed then begin
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glEnable(GL_LINE_SMOOTH);
+   glColor3f(1,0,0);
+  { -> Head         }
+    DrawLine(sHNE.x,sHNE.y,sHNW.x,sHNW.y,lw); //North Line
+    DrawLine(sHNE.x,sHNE.y,sHSE.x,sHSE.y,lw); //East Line
+    DrawLine(sHSW.x,sHSW.y,sHSE.x,sHSE.y,lw); //South Line
+    DrawLine(sHSW.x,sHSW.y,sHNW.x,sHNW.y,lw); //West Line
+
+  { -> Feet         }
+    DrawLine(sFNE.x,sFNE.y,sFNW.x,sFNW.y,lw); //North Line
+    DrawLine(sFNE.x,sFNE.y,sFSE.x,sFSE.y,lw); //East Line
+    DrawLine(sFSW.x,sFSW.y,sFSE.x,sFSE.y,lw); //South Line
+    DrawLine(sFSW.x,sFSW.y,sFNW.x,sFNW.y,lw); //West Line
+
+  { -> Vetical      }
+    DrawLine(sHNE.x,sHNE.y,sFNE.x,sFNE.y,lw); //North East Line
+    DrawLine(sHSE.x,sHSE.y,sFSE.x,sFSE.y,lw); //South East Line
+    DrawLine(sHSW.x,sHSW.y,sFSW.x,sFSW.y,lw); //South West Line
+    DrawLine(sHNW.x,sHNW.y,sFNW.x,sFNW.y,lw); //North West Line
+  end;
+end;
+
+
+
 
 
 
@@ -226,5 +329,8 @@ begin
   end;
 
 end;
+
+
+
 end.
 

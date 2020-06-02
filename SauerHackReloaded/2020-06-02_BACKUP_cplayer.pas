@@ -5,10 +5,18 @@ unit CPlayer;
 interface
 
 uses
-  Classes, SysUtils, Windows,
-
-  CustomTypes;
+  Classes, SysUtils, Windows;
 type
+  RVec3 = record
+    x:Single;
+    y:Single;
+    z:Single;
+  end;
+
+  RVec2i = record
+    x:Integer;
+    y:Integer
+  end;
 
   { TPlayer }
   { This class is for both enemies and the localplayer }
@@ -28,12 +36,12 @@ type
     PlayerNameString:array[0..99] of Char;
     PlayerNameStringLength:Integer;
 
-    PlayerBase:Pointer; //Pointer to Player
+    PlayerBase:PDWORD; //Pointer to Player
     Index:Cardinal;    //Position in EntityList (0 is localplayer)
     hp:Integer;        //Health
     ClientNumber:DWORD; //ClientNumber (CN)
     IsSpectating:Boolean;
-    BaseAddress:Pointer;
+    BaseAddress:DWORD;
 
     CursorPosition:RVec2i; //Cursor Position needed for PixelSearch triggerbot
 
@@ -46,16 +54,16 @@ implementation
 
 procedure TPlayer.FindPlayerPointer; stdcall;
 var
-  EntityList:Pointer; //Pointer to EntityList
-  List:Pointer;       //Actual List aka Pointer to first entity (the player)
+  EntityList:PDWORD; //Pointer to EntityList
+  List:PDWORD;       //Actual List aka Pointer to first entity (the player)
 begin
   { ---------------------- Setting PlayerBase ---------------------- }
   { -> $29CD34 is the offset from sauerbraten.exe to the EntityList  }
   {    Pointer                                                       }
   { -> Index determines which entry in the list should be read       }
-  EntityList:=Pointer(GetModuleHandle('sauerbraten.exe') + $29CD34);
-  List:=Pointer(EntityList^);
-  PlayerBase:=Pointer(Pointer(List + Index * $4)^);
+  EntityList:=PDWORD(GetModuleHandle('sauerbraten.exe') + $29CD34);
+  List:=PDWORD(EntityList^);
+  PlayerBase:=PDWORD(PDWORD(List + Index * $1)^);
 
 
 
@@ -63,9 +71,10 @@ end;
 
 procedure TPlayer.GetPlayerData; stdcall;
 var
-  TeamStringPointer:Pointer;
+  TempFloat:PSingle; //for conversion, there is maybe a better way to do this
+  TeamStringPointer:PDWORD;
   TeamStringCounter:Cardinal; //for looping through chars to extract the string
-  PlayerNamePointer:Pointer;
+  PlayerNamePointer:PDWORD;
   PlayerNameCounter:Cardinal;
 begin
   FindPlayerPointer();
@@ -74,7 +83,7 @@ begin
     begin
     { ------------------------ Read PlayerBase ----------------------- }
     { -> for debug                                                     }
-    BaseAddress:=Pointer(PlayerBase);
+    BaseAddress:=DWORD(PlayerBase);
 
 
 
@@ -85,10 +94,12 @@ begin
     {    opposed to the actual camera position (specifically Z)        }
     {    but this doesn't really matter because you can't duck in this }
     {    game                                                          }
-    pos.x:=PSingle(PlayerBase + $0)^;
-    pos.y:=PSingle(PlayerBase + $4)^;
-    pos.z:=PSingle(PlayerBase + $8)^;
-
+    TempFloat:=PSingle(PlayerBase + $0);
+    pos.x:=TempFloat^;
+    TempFloat:=PSingle(PlayerBase + $1);
+    pos.y:=TempFloat^;
+    TempFloat:=PSingle(PlayerBase + $2);
+    pos.z:=TempFloat^;
 
 
 
@@ -97,7 +108,7 @@ begin
     {    friends. $354 is the offset to team string                    }
     { -> cycle through all chars of the string until we hit the null   }
     {    termination                                                   }
-    TeamStringPointer:=Pointer(PlayerBase + $354); //fuck this
+    TeamStringPointer:=PlayerBase + round($354/4); //fuck this
     TeamStringCounter:=0;
     TeamStringLength:=0;
     while PChar(TeamStringPointer)[TeamStringCounter] <> Char(0) do
@@ -114,7 +125,7 @@ begin
     { -> reading the playername to display on ESP                      }
     { -> cycle through all chars of the string until we hit the null   }
     {    termination                                                   }
-    PlayerNamePointer:=Pointer(PlayerBase + $250); //fuck this
+    PlayerNamePointer:=Pointer(PlayerBase + round($250/4)); //fuck this
     PlayerNameCounter:=0;
     PlayerNameStringLength:=0;
     while PChar(PlayerNamePointer)[PlayerNameCounter] <> Char(0) do
@@ -136,19 +147,19 @@ begin
          { ---------- Read Health --------- }
          { -> relevant for target selection }
          { -> offset from playerbase = $15C }
-         hp:=PInteger(PlayerBase + $15C)^;
+         hp:=PInteger(PlayerBase + round($15C/4))^;
 
 
          { ------------ Read CN ----------- }
          { -> relevant for identification   }
          { -> offset from playerbase = $1B4 }
-         ClientNumber:=PDWORD(PlayerBase + $1B4)^;
+         ClientNumber:=PDWORD(PlayerBase + round($1B4/4))^;
 
 
          { -------- Read Spectating ------- }
          { -> relevant for target selection }
          { -> offset from playerbase = $7C }
-         if PBYTE(PlayerBase + $7C)^ = $5 then IsSpectating:=true;
+         if PBYTE(PlayerBase + round($7C/4))^ = $5 then IsSpectating:=true;
     end; // Enemy Related Data
   end; // if Playerbase <> 0
 end;
@@ -181,8 +192,8 @@ end;
 procedure TPlayer.SetPos(x: single; y: single; z: single);
 begin
   PSingle(PlayerBase + $0)^:=x;
-  PSingle(PlayerBase + $4)^:=y;
-  PSingle(PlayerBase + $8)^:=z;
+  PSingle(PlayerBase + $1)^:=y;
+  PSingle(PlayerBase + $2)^:=z;
 end;
 
 procedure TPlayer.CalibrateMouse; stdcall;

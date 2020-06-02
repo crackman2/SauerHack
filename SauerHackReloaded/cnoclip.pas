@@ -5,7 +5,7 @@ unit CNoclip;
 interface
 
 uses
-  Classes, SysUtils, windows, math, DrawText;
+  Classes, SysUtils, windows, math, DrawText, gl;
 
 type
 
@@ -30,6 +30,7 @@ type
 
     SpeedNormal:Single;
     SpeedFast:Single;
+    SpeedSlow:Single;
     SpeedCurrent:Single;
   end;
 
@@ -39,6 +40,7 @@ implementation
 
 constructor TNoclip.Create;
 var Original:Pointer;
+    FPS:Pointer;
 begin
   { ------- Setup Pointers To Writiable Player Positon ------- }
   { -> not the same as the one in the entity list              }
@@ -56,6 +58,7 @@ begin
   posy:=addposy;
   posz:=addposz;
 
+  {
   if GetAsyncKeyState(VK_O) <> 0 then begin
   MessageBox(0,PChar('addposx: ' + IntToHex(Cardinal(addposx),8) + LineEnding +
                      'addposy: ' + IntToHex(Cardinal(addposy),8) + LineEnding +
@@ -63,13 +66,19 @@ begin
                      'addcamx: ' + IntToHex(Cardinal(addcamx),8) + LineEnding +
                      'addcamy: ' + IntToHex(Cardinal(addcamy),8) + LineEnding),'e',0);
   end;
+  }
   { -------- Init Variables -------- }
-  SpeedNormal:=1;
+  FPS:=Pointer(GetModuleHandle('sauerbraten.exe') + $2A0710);
+  SpeedNormal:=200/PInteger(FPS)^;
   SpeedFast:=SpeedNormal*3;
+  SpeedSlow:=SpeedNormal/3;
   SpeedCurrent:=SpeedNormal;
 end;
 
 procedure TNoclip.PollControls; stdcall;
+var
+    viewp:array [0..3] of Glint;
+    ResetFallSpeed:Pointer;
 begin
   //glxDrawString(200,320,'Polling Controls',2,true);
   //glxDrawString(200,360,'posx: ' + IntToStr(round(posx^)),2,true);
@@ -79,14 +88,19 @@ begin
   //glxDrawString(200,440,'camy: ' + IntToStr(round(camy^)),2,true);
   //glxDrawString(200,460,'Speed: ' + IntToStr(round(SpeedCurrent)),2,true);
   if GetAsyncKeyState(VK_LSHIFT) <> 0 then SpeedCurrent:=SpeedFast;
+  if GetAsyncKeyState(VK_LCONTROL) <> 0 then SpeedCurrent:=SpeedSlow;
   if GetAsyncKeyState(VK_W) <> 0 then MovePlayer('W');
   if GetAsyncKeyState(VK_A) <> 0 then MovePlayer('A');
   if GetAsyncKeyState(VK_S) <> 0 then MovePlayer('S');
   if GetAsyncKeyState(VK_D) <> 0 then MovePlayer('D');
   if GetAsyncKeyState(VK_SPACE) <> 0 then MovePlayer('U');
-  if GetAsyncKeyState(VK_LCONTROL) <> 0 then MovePlayer('N');
 
 
+  ResetFallSpeed:=Pointer(PCardinal(GetModuleHandle('sauerbraten.exe') + $216454)^ + $20);
+  PSingle(ResetFallSpeed)^:=0;
+  glColor3f(0.8,0.8,0.8);
+  glGetIntegerv(GL_VIEWPORT,viewp);
+  glxDrawString(20,viewp[3]- 115,'Noclip active',2,true);
 end;
 
 procedure TNoclip.NOPFalling(State1Kill0Fix:Boolean); stdcall;
@@ -161,7 +175,6 @@ begin
             posy^:=posy^+(sin((camx^+180)/57.2958)*SpeedCurrent);
        end;
   'U': posz^:=posz^+SpeedCurrent;
-  'N': posz^:=posz^-SpeedCurrent;
 
   end;
 

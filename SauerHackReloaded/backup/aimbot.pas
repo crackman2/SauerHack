@@ -42,6 +42,7 @@ type
     public
     scrcord: RVec2;
     ShootByte:PByte;
+    Fog:Pointer;
   end;
 
 
@@ -60,12 +61,15 @@ implementation
 constructor TAimbot.Create(plr: PTPlayer; ens: PTEnArr);
 var
   ShootByteBase:Pointer;
+  Sauerbase:Pointer;
 begin
+  Sauerbase:=Pointer(GetModuleHandle('sauerbraten.exe'));
   ply:=plr;
   en:=ens;
-  ShootByteBase:= Pointer(GetModuleHandle('sauerbraten.exe') + $216454);
+  ShootByteBase:= Pointer(Sauerbase + $216454);
   ShootByteBase:= Pointer(Cardinal(ShootByteBase^) + $1E0);
   ShootByte:=PByte(ShootByteBase);
+  Fog:=Pointer(Sauerbase + $297C88);
 end;
 
 
@@ -203,11 +207,6 @@ begin
     end;
     inc(i);
   end;
-  if (GetAsyncKeyState(VK_Q) <> 0) and (BestTarget <> -1) then
-  MessageBox(0,PChar('BestTarget final: ' + inttostr(BestTarget) + LineEnding +
-                     'Position : ' + FloatToStr(en^[BestTarget].pos.x) + LineEnding + FloatToStr(en^[BestTarget].pos.y) + LineEnding + FloatToStr(en^[BestTarget].pos.z) + LineEnding +
-                     'Distance : ' + FloatToStr(distmin)
-  ),'e',0);
   Result:=BestTarget;
 end;
 
@@ -239,6 +238,13 @@ end;
 { -------------------- AutoTrigger / Triggerbot -------------------- }
 { -> Checks PixelColor in the center of the screen. if it is equal   }
 {    RGB($00,$FF,$02) it triggers using the ShootByte                }
+{ -> change enemy textures to be entirely green ($00FF00), ingame    }
+{    they should show up as $00FF02 of some reason. make sure to     }
+{    disable any shading, postprocessing or anything else that       }
+{    shades the models. they have to be fullbright. also disable     }
+{    ragdolling and dead player models in general to avoid misfiring }
+{ -> reliability is iffy at best because fog messes with colors but  }
+{    those can be disabled too (HAS BEEN ADDED)                      }
 procedure TAimbot.AutoTrigger(); stdcall;
 var
   pixel:array[0..3] of BYTE;
@@ -246,6 +252,7 @@ var
 begin
   glGetIntegerv(GL_VIEWPORT, viewp);
   glReadPixels(round(viewp[2]/2),round(viewp[3]/2),1,1,GL_RGB,GL_UNSIGNED_BYTE,@pixel[0]);
+
 
   if (pixel[0] = $0) and (pixel[1] = $FF) and (pixel[2] = $02) then
   begin

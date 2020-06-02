@@ -4,7 +4,7 @@ library SHReloaded;
 
 uses
   Classes, Swapbuffershook, Main, CPlayer, Aimbot, FunctionCaller, CESP,
-  DrawText, CNoclip
+  DrawText, CNoclip, CustomTypes
   { you can add units after this };
 
 

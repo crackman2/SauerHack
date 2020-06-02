@@ -47,9 +47,16 @@ ReleasedRBM:PByte;
 CurrentBestTarget:Integer;
 
 
+{ --------- Debug Screen F1 --------- }
+{ -> Shows information                }
+EnableDebug:PByte;
+DebugButtonPressed:PByte;
+
+
 
 procedure MainFunc();
 procedure GetPlayerCount();
+procedure ShowDebugMenu();
 
 implementation
 
@@ -175,9 +182,34 @@ begin
 
 
 
+  { --------------- Debug Screen F1 --------------- }
+  { -> Shows inforamtion                            }
+  { -> toggles with 'V'                             }
+  EnableDebug:=PByte($103E0);
+  DebugButtonPressed:=PByte($103E8);
+  if (GetAsyncKeyState(VK_F1) <> 0) and (DebugButtonPressed^=0) and (EnableDebug^=0) then begin
+    EnableDebug^:=1;
+    DebugButtonPressed^:=1;
+  end;
+
+  if (GetAsyncKeyState(VK_F1) <> 0) and (DebugButtonPressed^=0) and (EnableDebug^=1) then begin
+    EnableDebug^:=0;
+    DebugButtonPressed^:=1;
+  end;
+
+  if (GetAsyncKeyState(VK_F1) = 0) then DebugButtonPressed^:=0;
+
+  if EnableDebug^=1 then begin
+     ShowDebugMenu();
+  end;
+
+
+
+
   { ------------ Drawing ESP ------------- }
   { -> draws red boxes around enemy player }
   esp.DrawESP();
+
 
 
 
@@ -215,6 +247,15 @@ var
 begin
   tmp:=PInteger(GetModuleHandle('sauerbraten.exe') + $29CD3C);
   PlayerCount:=tmp^-1;
+end;
+
+procedure ShowDebugMenu;
+begin
+  glColor3f(0.8,0.8,0.8);
+  glxDrawString(200,200,'::Debug Screen::',2,true);
+  glxDrawString(200,215,'posx: ' + IntToStr(round(Player.pos.x)),2,true);
+  glxDrawString(200,230,'posy: ' + IntToStr(round(Player.pos.y)),2,true);
+  glxDrawString(200,245,'posz: ' + IntToStr(round(Player.pos.z)),2,true);
 end;
 
 
