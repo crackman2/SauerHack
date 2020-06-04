@@ -26,7 +26,7 @@
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
     </RunParams>
-    <Units Count="10">
+    <Units Count="15">
       <Unit0>
         <Filename Value="SHR.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -77,6 +77,28 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="CNoclip"/>
       </Unit9>
+      <Unit10>
+        <Filename Value="customtypes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CustomTypes"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="menu\menumain.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="menu\controldrawer.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="menu\cmenuwindow.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="cflagstealer.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="CFlagStealer"/>
+      </Unit14>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -87,6 +109,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="menu"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>

@@ -18,6 +18,7 @@ type
     y:Single;
     z:Single;
   end;
+  PRVec3 = ^RVec3;
   RVec2i = record
     x:Integer;
     y:Integer

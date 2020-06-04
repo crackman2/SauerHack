@@ -18,8 +18,11 @@ type
     procedure GetPlayerData; stdcall;
     procedure SetCamera(camH: single; camV: single); stdcall;
     procedure SetPos(x: single; y: single; z: single);
+    procedure SetPosAlt(x: single; y: single; z: single);
     procedure CalibrateMouse; stdcall;
     constructor Create(TheIndex: cardinal);
+
+
 
   public
     pos: RVec3;     //World Position
@@ -186,6 +189,13 @@ begin
   PSingle(PlayerBase + $0)^ := x;
   PSingle(PlayerBase + $4)^ := y;
   PSingle(PlayerBase + $8)^ := z;
+end;
+
+procedure TPlayer.SetPosAlt(x: single; y: single; z: single);
+begin
+  PSingle(PlayerBase + $30)^ := x;
+  PSingle(PlayerBase + $34)^ := y;
+  PSingle(PlayerBase + $38)^ := z;
 end;
 
 procedure TPlayer.CalibrateMouse; stdcall;

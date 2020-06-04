@@ -58,6 +58,7 @@ begin
       if (en^[i].TeamString[0] <> ply^.TeamString[0]) or (not IsTeamBased()) then
       begin
         en^[i].SetPos(ply^.pos.x, ply^.pos.y, ply^.pos.z);
+        en^[i].SetPosAlt(ply^.pos.x, ply^.pos.y, ply^.pos.z);
       end;
     end;
     Inc(i);
