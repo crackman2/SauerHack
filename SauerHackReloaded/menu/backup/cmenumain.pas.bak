@@ -32,8 +32,8 @@ type
     menuscale: single;
     MouseX:Single;
     MouseY:Single;
-    CheckBoxes:array [0..2] of TCheckbox;
-    CheckBoxStrings:array [0..2] of String;
+    CheckBoxes:array [0..3] of TCheckbox;
+    CheckBoxStrings:array [0..3] of String;
     CheckBoxNumber:Cardinal;
     PointerListStart:Pointer;
   end;
@@ -71,6 +71,8 @@ begin
   CheckBoxStrings[1]:='Enable Aimbot';
   CheckBoxStrings[2]:='Enable Lockaim';
   CheckBoxStrings[3]:='Enable Noclipping';
+  CheckBoxStrings[4]:='Enable Teleport all to you';
+  CheckBoxStrings[5]:='Enable autocapture flag';
 
   for i:= 0 to CheckBoxNumber do begin
       CheckBoxes[i]:= TCheckbox.Create(@mainwin, 10, 30+((8*menuscale)*i), CheckBoxStrings[i], menuscale, True, Pointer(PointerListStart + i*$4));

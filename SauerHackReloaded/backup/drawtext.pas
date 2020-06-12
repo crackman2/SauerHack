@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, gl, math;
 
 var
-  Alphabet: array [0..39] of array[0..19] of
+  Alphabet: array [0..46] of array[0..19] of
   cardinal = (
   ///////////////
   (0, 1, 1, 0, //
@@ -278,7 +278,50 @@ var
    0, 1, 0, 1, //#9
    0, 1, 1, 1, //
    0, 0, 0, 1, //
-   0, 1, 1, 1)
+   0, 1, 1, 1),
+   ///////////////
+  (0, 0, 0, 0, //
+   0, 0, 0, 0, //#.
+   0, 0, 0, 0, //
+   0, 0, 0, 0, //
+   1, 0, 0, 0),//
+   ///////////////
+  (0, 0, 0, 0, //
+   0, 0, 0, 0, //#,
+   0, 0, 0, 0, //
+   1, 0, 0, 0, //
+   1, 0, 0, 0),//
+   ///////////////
+  (0, 0, 1, 0, //
+   0, 1, 0, 0, //#(
+   0, 1, 0, 0, //
+   0, 1, 0, 0, //
+   0, 0, 1, 0),//
+   ///////////////
+  (0, 1, 0, 0, //
+   0, 0, 1, 0, //#)
+   0, 0, 1, 0, //
+   0, 0, 1, 0, //
+   0, 1, 0, 0),//
+   ///////////////
+  (0, 0, 0, 0, //
+   0, 0, 0, 1, //#/
+   0, 0, 1, 0, //
+   0, 1, 0, 0, //
+   1, 0, 0, 0),//
+   ///////////////
+  (0, 1, 0, 0, //
+   0, 1, 0, 0, //#'
+   0, 0, 0, 0, //
+   0, 0, 0, 0, //
+   0, 0, 0, 0),//
+   ///////////////
+  (0, 0, 0, 0, //
+   0, 0, 0, 0, //#-
+   0, 1, 1, 1, //
+   0, 0, 0, 0, //
+   0, 0, 0, 0),//
+
   );
 
 procedure glxDrawString(x: Single; y: Single; Num: AnsiString; Scale:Single; LeftBound:Boolean); stdcall;
@@ -391,6 +434,20 @@ begin
         CurrentNumber:= 38;
       '9':
         CurrentNumber:= 39;
+      '.':
+        CurrentNumber:= 40;
+      ',':
+        CurrentNumber:= 41;
+      '(':
+        CurrentNumber:= 42;
+      ')':
+        CurrentNumber:= 43;
+      '/':
+        CurrentNumber:= 44;
+      '''':
+        CurrentNumber:= 45;
+      '-':
+        CurrentNumber:= 46;
 
       else
         CurrentNumber:= 29;
@@ -410,7 +467,7 @@ begin
             glBegin(GL_POINTS);
             glVertex2f(
                round(x) + round((i * (5*Scale)) + (dimPixX*Scale)),
-               round(y) + round((dimPixY)*round(Scale*(5/3)))
+               round(y) + round((dimPixY)*round(Scale))
             );
             glEnd()
           end

@@ -61,11 +61,12 @@ var
   Menu:TMenu;
   MenuPosX:Pointer=Pointer($10500);
   MenuPosY:Pointer=Pointer($10504);
-  { -> Settings pointers              }
   EnableESP:PByte=PByte($10600);
   EnableAimbot:PByte=PByte($10604);
   EnableLockAim:PByte=PByte($10608);
   EnableNoclipping:PByte=PByte($1060C);
+  EnableTATY:PByte=PByte($10610);
+  EnableFlagSteal:PByte=PByte($10614);
   EnableMenu:PByte;
 
   { ------- FlagStealer Object ------ }
@@ -99,6 +100,8 @@ begin
   inc(PCardinal(pCounter)^);
   GetPlayerCount();
 
+
+
   { --- Initial Values for Pointers --- }
   if PByte(EnableESP-$4)^=0 then begin
     EnableAimbot^:=1;
@@ -110,6 +113,7 @@ begin
     PSingle(MenuPosX)^:=100;
     PSingle(MenuPosY)^:=100;
   end;
+
 
 
   { ------ Object Initialization ------ }
@@ -129,7 +133,7 @@ begin
   Aimer := TAimbot.Create(@Player, @Enemy);
   taty := TTeleAETY.Create(@Player, @Enemy, PlayerCount);
   noclip := TNoclip.Create;
-  Menu:=TMenu.Create(PSingle(MenuPosX)^,PSingle(MenuPosY)^,330,120,'SauerHack Reloaded',2.5,EnableESP);
+  Menu:=TMenu.Create(PSingle(MenuPosX)^,PSingle(MenuPosY)^,355,150,'SauerHack Reloaded',2.5,EnableESP);
   FlagStealer:=TFlagStealer.Create();
   i := 1;
   while (i <= PlayerCount) do
@@ -177,12 +181,12 @@ begin
         end
         else
         begin
-          if GetAsyncKeyState(VK_P) <> 0 then
+          if GetAsyncKeyState(VK_O) <> 0 then
           begin
-            MessageBox(0, PChar('Current Target: 0x' +
-              IntToHex(DWORD(Enemy[CurrentBestTarget].PlayerBase), 8)), 'e', 0);
+            //Debug Output. Show current targets pointer
+            // MessageBox(0, PChar('Current Target: 0x' +
+            //   IntToHex(DWORD(Enemy[CurrentBestTarget].PlayerBase), 8)), 'e', 0);
           end;
-
           Aimer.Aim(CurrentBestTarget);
           Aimer.AutoTrigger();
         end;
@@ -205,16 +209,24 @@ begin
       Aimer.Aim(Aimer.GetBestTarget(PlayerCount));
       Aimer.AutoTrigger();
     end;
-
-
   end;
+
 
 
   { ------------ TATY ------------- }
-  if GetAsyncKeyState(VK_X) <> 0 then
+  if GetAsyncKeyState(VK_X) <> 0 and (EnableTATY^=1) then
   begin
     taty.TeleportAllEnemiesInfrontOfYou();
   end;
+
+
+  { ------------ FlagStealer ------------- }
+  { -> teleport between flags              }
+  { -> infinite points                     }
+  if GetAsyncKeyState(VK_P) <> 0 then begin
+    FlagStealer.SpamTeleport();
+  end;
+
 
   { --------------- Noclip --------------- }
   { -> lets you fly around the map         }
@@ -279,16 +291,15 @@ begin
 
 
 
-
   { ------------ Drawing ESP ------------- }
   { -> draws red boxes around enemy player }
   if EnableESP^=1 then esp.DrawESP();
 
 
+
   { ------------ Drawing Menu ------------ }
   { -> draws menu                          }
   { -> init menu settings                  }
-
   if EnableMenu^ = 1 then
   begin
     glEnable(GL_BLEND);
@@ -298,15 +309,6 @@ begin
     Menu.PollControls;
     Menu.DrawMenu;
   end;
-
-
-  { ------------ FlagStealer ------------- }
-  { -> teleport between flags              }
-  { -> infinite points                     }
-  if GetAsyncKeyState(VK_P) <> 0 then begin
-    FlagStealer.SpamTeleport();
-  end;
-
 
 
 
@@ -329,8 +331,6 @@ begin
 
 
 
-
-
   { ----- Debug Line ----- }
   { -> confirms hack       }
   {    is active           }
@@ -350,16 +350,39 @@ begin
 end;
 
 procedure ShowDebugMenu;
+var
+  Help:array[0..11] of AnsiString;
+  i:Cardinal;
+  Y:Cardinal=150;
+  X:Cardinal=100;
 begin
   glColor3f(0.8, 0.8, 0.8);
-  glxDrawString(200, 200, '::Debug Screen::', 2, True);
-  glxDrawString(200, 215, 'posx: ' + IntToStr(round(Player.pos.x)), 2, True);
-  glxDrawString(200, 230, 'posy: ' + IntToStr(round(Player.pos.y)), 2, True);
-  glxDrawString(200, 245, 'posz: ' + IntToStr(round(Player.pos.z)), 2, True);
+  glxDrawString(X, Y+ 000, '::Debug Screen::', 2, True);
+  glxDrawString(X, Y+ 015, 'posx: ' + IntToStr(round(Player.pos.x)), 2, True);
+  glxDrawString(X, Y+ 030, 'posy: ' + IntToStr(round(Player.pos.y)), 2, True);
+  glxDrawString(X, Y+ 045, 'posz: ' + IntToStr(round(Player.pos.z)), 2, True);
+
+
+  Help[00]:='- right click to aim at target';
+  Help[01]:='- ''V'' to noclip. controls are WASD Space LShift LCtrl';
+  Help[02]:='- ''X'' to teleport everyone to you';
+  Help[03]:='- ''P'' to auto capture flags (works only if the flags are at their spawns)';
+  Help[04]:='- the triggerbot checks colors. for it to work you must';
+  Help[05]:='  - replace the orgo textureS in packages/models/ogro2';
+  Help[06]:='  - replace green.jpg and red.jpg with a filled color of R0 G255 B0';
+  Help[07]:='    so they are entirely green';
+  Help[08]:='  - in game settings: enable fullbright playermodels and set to max';
+  Help[09]:='                      force matching playermodels and play as orgo (or any other model you picked)';
+  Help[10]:='                      enable hide dead players';
+  Help[11]:='                      in gfx disable: shaders, shadowmaps, dynamic lights, models (lighting, reflection, glow)';
+
+
+  for i:=0 to Length(Help)-1 do begin
+      glxDrawString(X, Y+75+i*15, Help[i], 2, True);
+  end;
+
+
 
 end;
-
-
-
 
 end.

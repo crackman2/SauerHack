@@ -33,6 +33,11 @@ implementation
 
 { TFlagStealer }
 
+{ ------------------ FlagStealer ------------------ }
+{ -> Reads the position of both flags in ctf modes  }
+{ -> Teleports the player back and forth to both    }
+{    positions                                      }
+{ -> easily detected by server scripts and admins   }
 constructor TFlagStealer.Create();
 var
   Sauerbase:Pointer;
@@ -57,20 +62,26 @@ begin
 
 end;
 
-
+{ ------------------ SpamTeleport ------------------ }
+{ -> Reads the position of both flags in ctf modes  }
+{ -> Teleports the player back and forth to both    }
+{    positions                                      }
+{ -> easily detected by server scripts and admins   }
 procedure TFlagStealer.SpamTeleport();
 begin
-  if FlipFlop^=0 then begin
-    FlipFlop^:=1;
-    PlyPos^.x:=PSingle(RedFlagPointer + $0)^;
-    PlyPos^.y:=PSingle(RedFlagPointer + $4)^;
-    PlyPos^.z:=PSingle(RedFlagPointer + $8)^ + 15;
-  end
-  else begin
-    FlipFlop^:=0;
-     PlyPos^.x:=PSingle(BlueFlagPointer + $0)^;
-     PlyPos^.y:=PSingle(BlueFlagPointer + $4)^;
-     PlyPos^.z:=PSingle(BlueFlagPointer + $8)^ + 15;
+  if IsCTFMode() then begin
+    if FlipFlop^=0 then begin
+      FlipFlop^:=1;
+      PlyPos^.x:=PSingle(RedFlagPointer + $0)^;
+      PlyPos^.y:=PSingle(RedFlagPointer + $4)^;
+      PlyPos^.z:=PSingle(RedFlagPointer + $8)^ + 15;
+    end
+    else begin
+      FlipFlop^:=0;
+       PlyPos^.x:=PSingle(BlueFlagPointer + $0)^;
+       PlyPos^.y:=PSingle(BlueFlagPointer + $4)^;
+       PlyPos^.z:=PSingle(BlueFlagPointer + $8)^ + 15;
+    end;
   end;
 end;
 

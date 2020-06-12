@@ -33,6 +33,11 @@ implementation
 
 { TFlagStealer }
 
+{ ------------------ FlagStealer ------------------ }
+{ -> Reads the position of both flags in ctf modes  }
+{ -> Teleports the player back and forth to both    }
+{    positions                                      }
+{ -> easily detected by server scripts and admins   }
 constructor TFlagStealer.Create();
 var
   Sauerbase:Pointer;
@@ -57,7 +62,8 @@ begin
 
 end;
 
-
+{ ------------------ SpamTeleport ------------------ }
+{ -> FlipFlop decides which place to teleport to next}
 procedure TFlagStealer.SpamTeleport();
 begin
   if IsCTFMode() then begin
