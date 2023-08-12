@@ -145,6 +145,7 @@ begin
 
 
       { ------------ Read CN ----------- }
+      { -> client number                 }
       { -> relevant for identification   }
       { -> offset from playerbase = $1B4 }
       ClientNumber := PDWORD(PlayerBase + $1B4)^;

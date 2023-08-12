@@ -11,108 +11,75 @@ uses
   CMenuMain, CFlagStealer;
 
 var
-  { ------- Variable Storage ------- }
-  { -> as of 2022/03/20, locations at}
-  {    10300 and beyond seem broken  }
-  { -> they probably have been for a }
-  {    while now and maybe only      }
-  {    worked on Windows 7           }
-  { -> Storage of those variables    }
-  {    is now moved to a code cave   }
-  {    starting at                   }
-  {    libmikmod-2.dll+35090         }
-  { -> the variable dwLibMikModBase  }
-  {    plus an offset will replace   }
-  {    any reference to 10300 and    }
-  {    beyond                        }
-  { -> Init in MainFunc begin!       }
-  dwLibMikModBase:DWORD=0;
-
-
-
-  { --------- Player Object -------- }
-  { -> read position & team          }
-  { -> set camera angles             }
+  { ----------------------------- Player Object ---------------------------- }
+  { -> read position & team                                                  }
+  { -> set camera angles                                                     }
   Player: TPlayer;
 
 
-  { --------- Aimbot Object -------- }
-  { -> Target selection              }
-  { -> Aiming & auto trigger via     }
-  {    color check                   }
+  { ----------------------------- Aimbot Object ---------------------------- }
+  { -> Target selection                                                      }
+  { -> Aiming & auto trigger via                                             }
+  {    color check                                                           }
   Aimer: TAimbot;
-
-
-  { ----------- Lock Aim ----------- }
-  //LockAim: PByte = PByte(cave + $3C0);
+  EnableAimbot:PByte=nil;
   LockAim: PByte = nil;
-  //ReleasedRBM: PByte=PByte(cave + $3C8);
   ReleasedRBM: PByte = nil;
   CurrentBestTarget: integer;
+  EnableLockAim:PByte=nil;
 
 
-  { ------ Enemy Object Array ------ }
-  { -> read position & team          }
+  { -------------------------- Enemy Object Array -------------------------- }
+  { -> read position & team                                                  }
   Enemy: array[1..32] of TPlayer;
-
   PlayerCount: integer;
 
 
-  { ---------- ESP Object ---------- }
-  { -> draw enemies on screen        }
+  { ------------------------------ ESP Object ------------------------------ }
+  { -> draw enemies on screen                                                }
   esp: TESP;
+  EnableESP:PByte=nil;
 
 
-  { ---------- TATY Object ---------- }
+  { ------------------------------ TATY Object ----------------------------- }
   { -> teleport everyone to you       }
   { -> may cause death                }
   taty: TTeleAETY;
+  EnableTATY:PByte=nil;
 
 
-  { --------- Noclip Object --------- }
-  { -> fly around                     }
+  { ----------------------------- Noclip Object ---------------------------- }
+  { -> fly around                                                            }
   noclip: TNoclip;
   EnableNoclip: PByte;
   NoclipButtonPressed: PByte;
-
-
-  { ---------- Menu Object ---------- }
-  { -> draws menu for controlling     }
-  {    settings                       }
-  Menu:TMenu;
-  //MenuPosX:Pointer=Pointer(cave + $500);
-  MenuPosX:Pointer=nil;
-  //MenuPosY:Pointer=Pointer(cave + $504);
-  MenuPosY:Pointer=nil;
-  //EnableESP:PByte=PByte(cave + $600);
-  EnableESP:PByte=nil;
-  //EnableAimbot:PByte=PByte(cave + $604);
-  EnableAimbot:PByte=nil;
-  //EnableLockAim:PByte=PByte(cave + $608);
-  EnableLockAim:PByte=nil;
-  //EnableNoclipping:PByte=PByte(cave + $60C);
   EnableNoclipping:PByte=nil;
-  //EnableTATY:PByte=PByte(cave + $610);
-  EnableTATY:PByte=nil;
-  //EnableFlagSteal:PByte=PByte(cave + $614);
-  EnableFlagSteal:PByte=nil;
+
+
+  { ------------------------------ Menu Object ----------------------------- }
+  { -> draws menu for controlling                                            }
+  {    settings                                                              }
+  Menu:TMenu;
+  MenuPosX:Pointer=nil;
+  MenuPosY:Pointer=nil;
   EnableMenu:PByte=nil;
 
-  { ------- FlagStealer Object ------ }
-  { -> Save location of both flags    }
-  { -> teleport back and forth        }
+
+  { --------------------------- FlagStealer Object ------------------------- }
+  { -> Save location of both flags                                           }
+  { -> teleport back and forth                                               }
   FlagStealer:TFlagStealer;
+  EnableFlagSteal:PByte=nil;
 
 
-  { --------- Debug Screen F1 --------- }
-  { -> Shows information                }
+  { ---------------------------- Debug Screen F1 --------------------------- }
+  { -> Shows information                                                     }
   EnableDebug: PByte;
   DebugButtonPressed: PByte;
 
 
-  { --------- Counter Pointer --------- }
-  { -> counts up! :D located at $10300  }
-  //pCounter:Pointer=Pointer(cave + $300);
+  { ---------------------------- Counter Pointer --------------------------- }
+  { -> counts up! :D located at cave + $300                                  }
   pCounter:Pointer=nil;
 
 
@@ -121,7 +88,6 @@ procedure GetPlayerCount();
 procedure ShowDebugMenu();
 procedure glEnter2DDrawingMode; stdcall;
 procedure glLeave2DDrawingMode; stdcall;
-procedure glShowGLError(Marker:Pchar);
 
 implementation
 
@@ -132,26 +98,26 @@ var
 
   oldGLContext:HGLRC;
 begin
-
+  { ------------------------ Prepare OpenGL Drawing ------------------------ }
+  { -> oldGLContext is the current context used by the game. Apparently it   }
+  {    is impossible to use in it's current state for our purposes, so we    }
+  {    just create a new one                                                 }
+  { -> caveHDC is the device context, grabbed frome the wglSwapBuffers call  }
+  { -> caveNewRC is a new device context that was created when the hook code }
+  {    was run the first time                                                }
   oldGLContext:=wglGetCurrentContext;
   wglMakeCurrent(caveHDC,caveNewRC);
   glEnter2DDrawingMode;
 
-
-  //MessageBox(0,'hello world','hello world',0);
-
-  //glEnter2DDrawingMode;
-
-
-  pCounter:=Pointer       (cave + $300);
+  { ------------------------------- pCounter ------------------------------- }
+  { -> is just used to see if the hack is actually being executed (can be    }
+  {    omitted                                                               }
+  pCounter:=Pointer(cave + $300);
   inc(PCardinal(pCounter)^);
-  //GetPlayerCount();
 
 
-  { --- LibMikModBase Init and other Pointers --- }
-  //dwLibMikModBase:=GetModuleHandle('libmikmod-2.dll')+$35190;   //crap, must remove
-
-  { ------ Init Pointers ------ }
+  { ----------------------------- Init Pointers ---------------------------- }
+  {                     }
   LockAim:= PByte         (cave + $3C0);
   ReleasedRBM:=PByte      (cave + $3C8);
   MenuPosX:=Pointer       (cave + $500);
@@ -164,8 +130,7 @@ begin
   EnableFlagSteal:=PByte  (cave + $614);
 
 
-
-  { --- Initial Values for Pointers --- }
+  { ---------------------- Initial Values for Pointers --------------------- }
   if PByte(EnableESP-$4)^=0 then begin
     EnableAimbot^:=1;
     EnableESP^:=1;
@@ -179,16 +144,12 @@ begin
 
 
 
-  { ------ Object Initialization ------ }
-  { -> calls constructor for the        }
-  {    localplayer object               }
-  { -> calls constructor for the        }
-  {    enemy array                      }
-  { -> sets the index and stuff..       }
-  { -> calls constructor for the        }
-  {    esp object                       }
-  { -> calls constructor for the        }
-  {    aimbot object                    }
+  { ------------------------- Object Initialization ------------------------ }
+  { -> calls constructor for the localplayer object                          }
+  { -> calls constructor for the enemy array                                 }
+  { -> sets the index and stuff..                                            }
+  { -> calls constructor for the esp object                                  }
+  { -> calls constructor for the aimbot object                               }
   //Player := TPlayer.Create(0); COMMENTED FOR DEBUG
   //Player.Index := 0;           COMMENTED FOR DEBUG
   //Player.GetPlayerData();       COMMENTED FOR DEBUG
@@ -209,14 +170,14 @@ begin
 
 
 
-  { ------------ Aimbot Cylce ------------ }
-  { -> Checks hotkey                       }
-  { -> selects best target and keeps aiming}
-  {    until the target is dead            }
-  { -> stops aiming when the enemy is dead }
-  { -> reclick hotkey to aim at next taget }
-  { -> this should really be its own       }
-  {    function....                        }
+  { ----------------------------- Aimbot Cylce ----------------------------- }
+  { -> Checks hotkey                                                         }
+  { -> selects best target and keeps aiming                                  }
+  {    until the target is dead                                              }
+  { -> stops aiming when the enemy is dead                                   }
+  { -> reclick hotkey to aim at next taget                                   }
+  { -> this should really be its own                                         }
+  {    function....                                                          }
   (*
   if (EnableAimbot^=1) and (EnableLockAim^=1) then begin
     if not (GetAsyncKeyState($1) <> 0) then
@@ -279,24 +240,24 @@ begin
 
 
 
-  { ------------ TATY ------------- }
+  { --------------------------------- TATY --------------------------------- }
   if (GetAsyncKeyState(VK_X) <> 0) and (EnableTATY^=1) then
   begin
     //taty.TeleportAllEnemiesInfrontOfYou();COMMENTED FOR DEBUG
   end;
 
 
-  { ------------ FlagStealer ------------- }
-  { -> teleport between flags              }
-  { -> infinite points                     }
+  { ----------------------------- FlagStealer ------------------------------ }
+  { -> teleport between flags                                                }
+  { -> infinite points                                                       }
   if (GetAsyncKeyState(VK_P) <> 0) and (EnableFlagSteal^=1) then begin
     //FlagStealer.SpamTeleport();    COMMENTED FOR DEBUG
   end;
 
 
-  { --------------- Noclip --------------- }
-  { -> lets you fly around the map         }
-  { -> toggles with 'V'                    }
+  { -------------------------------- Noclip -------------------------------- }
+  { -> lets you fly around the map                                           }
+  { -> toggles with 'V'                                                      }
   EnableNoclip := PByte(cave + $3D0);
   //EnableNoclip := PByte(dwLibMikModBase + $0D0);
   NoclipButtonPressed := PByte(cave + $3D8);
@@ -330,9 +291,9 @@ begin
 
 
 
-  { --------------- Debug Screen F1 --------------- }
-  { -> Shows inforamtion                            }
-  { -> toggles with 'V'                             }
+  { ---------------------------- Debug Screen F1 --------------------------- }
+  { -> Shows inforamtion                                                     }
+  { -> toggles with 'V'                                                      }
   EnableDebug := PByte(cave + $3E0);
   //EnableDebug := PByte(dwLibMikModBase + $0E0);
   DebugButtonPressed := PByte(cave + $3E8);
@@ -361,15 +322,15 @@ begin
 
 
 
-  { ------------ Drawing ESP ------------- }
-  { -> draws red boxes around enemy player }
+  { ----------------------------- Drawing ESP ------------------------------ }
+  { -> draws red boxes around enemy player                                   }
   //if EnableESP^=1 then esp.DrawESP();        COMMENTED FOR DEBUG
 
 
 
-  { ------------ Drawing Menu ------------ }
-  { -> draws menu                          }
-  { -> init menu settings                  }
+  { ----------------------------- Drawing Menu ----------------------------- }
+  { -> draws menu                                                            }
+  { -> init menu settings                                                    }
   if EnableMenu^ = 1 then
   begin
       glEnable(GL_BLEND);
@@ -382,15 +343,15 @@ begin
 
 
 
-  { ------ Object Destroyer ------ }
-  { -> prevent leaks. doesn't work }
-  { -> TO DO: FIX THIS///Done..    }
+  { --------------------------- Object Destroyer --------------------------- }
+  { -> prevent leaks. doesn't work                                           }
+  { -> TO DO: FIX THIS///Done..                                              }
   //Aimer.Destroy;                            COMMENTED FOR DEBUG
   //Player.Destroy;                       COMMENTED FOR DEBUG
   //esp.Destroy;                      COMMENTED FOR DEBUG
   //taty.Destroy;                 COMMENTED FOR DEBUG
   //noclip.Destroy;             COMMENTED FOR DEBUG
-  //Menu.Destroy;
+  Menu.Destroy;
   //FlagStealer.Destroy;    COMMENTED FOR DEBUG
   //i := 1;       COMMENTED FOR DEBUG
   //while (i <= PlayerCount) do COMMENTED FOR DEBUG
@@ -401,36 +362,22 @@ begin
 
 
 
-  { ----- Debug Line ----- }
-  { -> confirms hack       }
-  {    is active           }
-
-  //glClear(GL_COLOR_BUFFER_BIT);
+  { ------------------------------ Debug Line ------------------------------ }
+  { -> confirms hack                                                         }
+  {    is active                                                             }
 
   glColor3f(0.3, 1.0, 0.3);
-  glShowGLError('glColor');
   glLineWidth(5);
-  glShowGLError('glLineWidth');
   glBegin(GL_LINES);
-  glShowGLError('glBegin');
   glVertex2f(-1, -1);
-  glShowGLError('glVertex2f(-1,-1)');
   glVertex2f(1.0, 1.0);
-  glShowGLError('glVertex2f(1,1)');
   glEnd();
-  glShowGLError('glEnd(1,1)');
-
 
   glColor3f(0.0, 1.0, 0.0);
-  glShowGLError('glcolor');
   glBegin(GL_LINES);
-  glShowGLError('glbegin');
       glVertex2f(-0.5, -0.5);
-      glShowGLError('glvertex2f');
       glVertex2f(0.5, 0.5);
-      glShowGLError('glvertex2f again');
   glEnd();
-  glShowGLError('glEnd');
 
   glLeave2DDrawingMode;
 
@@ -478,51 +425,33 @@ begin
   end;
 end;
 
+{ -------------------------- glEnter2DDrawingMode -------------------------- }
+{ -> sets out context up to draw properly                                    }
+{ -> glGetIntegerv and glOrtho allow us to use usual x,y pixel coordinates   }
+{    meaning that 0,0 is the top left pixel and the bottom right one is      }
+{    equal to the current resolution                                         }
 procedure glEnter2DDrawingMode; stdcall;
 var
    viewport: array[0..3] of GLint;
 begin
-  //glDisable(GL_DEPTH_TEST);
-  //glDisable(GL_CULL_FACE);
-  //glDisable(GL_TEXTURE_2D);
-  //glDisable(GL_LIGHTING);
-
-
-
-  glShowGLError('just nothing');
   glMatrixMode(GL_PROJECTION);
-  glShowGLError('glMatrixMode(GL_PROJECTION)');
   glLoadIdentity();
-  glShowGLError('glLoadIdentity()');
 
   glGetIntegerv(GL_VIEWPORT,viewport);
-
-
   glOrtho(0, viewport[2], viewport[3], 0, -1.0, 1.0);
-  glShowGLError('glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)');
 
   glMatrixMode(GL_MODELVIEW);
-  glShowGLError('glMatrixMode(GL_MODELVIEW)');
   glLoadIdentity();
-  glShowGLError('glLoadIdentity()');
-
 end;
+
+{ -------------------------- glLeave2DDrawingMode -------------------------- }
+{ -> can possibly be omitted, but I keep it in case some update breaks       }
+{    everything                                                              }
 
 procedure glLeave2DDrawingMode; stdcall;
 begin
   glFlush();
   glEnable(GL_TEXTURE_2D);
-end;
-
-procedure glShowGLError(Marker: Pchar);
-var
-  error_code:GLenum;
-begin
-  error_code:=glGetError();
-  if(error_code <> GL_NO_ERROR) then begin
-                //MessageBox(0,PChar('Error in "' + Marker + '":' + IntToStr(error_code)),'gl kaputt',0);
-  end;
-  glGetError();
 end;
 
 end.

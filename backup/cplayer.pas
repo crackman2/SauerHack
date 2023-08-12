@@ -18,11 +18,12 @@ type
     procedure GetPlayerData; stdcall;
     procedure SetCamera(camH: single; camV: single); stdcall;
     procedure SetPos(x: single; y: single; z: single);
+    procedure SetPosAlt(x: single; y: single; z: single);
     procedure CalibrateMouse; stdcall;
     constructor Create(TheIndex: cardinal);
 
-  private
-    procedure SetPosAlt(x: single; y: single; z: single);
+
+
   public
     pos: RVec3;     //World Position
     TeamString: array[0..99] of char;  //Team name
