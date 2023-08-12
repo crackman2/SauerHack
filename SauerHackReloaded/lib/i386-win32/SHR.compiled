@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CONFIG>
-  <Compiler Value="G:\lazarus\fpc\3.0.4\bin\i386-win32\fpc.exe" Date="1331393133"/>
-  <Params Value=" -Twin32 -MObjFPC -Scghi -CX -WR -O1 -Xs -l -vewnibq -vh- -FiG:\Script\GitHub\SauerHack\SauerHackReloaded\lib\i386-win32 -FuG:\Script\GitHub\SauerHack\SauerHackReloaded\menu -FuG:\Script\GitHub\SauerHack\SauerHackReloaded\ -FUG:\Script\GitHub\SauerHack\SauerHackReloaded\lib\i386-win32\ -FEG:\Script\GitHub\SauerHack\SauerHackReloaded\ -oG:\Script\GitHub\SauerHack\SauerHackReloaded\SHR.dll SHR.lpr"/>
-</CONFIG>

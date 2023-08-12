@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CONFIG>
-  <Compiler Value="G:\lazarus\fpc\3.0.4\bin\i386-win32\fpc.exe" Date="1331391085"/>
-  <Params Value=" -MObjFPC -Scghi -WR -O1 -l -vewnhibq -FiG:\Script\GitHub\SauerHack\OGL\lib\i386-win32 -FuG:\Script\GitHub\SauerHack\OGL\ -FUG:\Script\GitHub\SauerHack\OGL\lib\i386-win32\ -FEG:\Script\GitHub\SauerHack\OGL\ -oG:\Script\GitHub\SauerHack\OGL\OGL.dll OGL.lpr"/>
-</CONFIG>
