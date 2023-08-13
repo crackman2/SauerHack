@@ -328,11 +328,11 @@ procedure glxDrawString(x: Single; y: Single; Num: AnsiString; Scale:Single; Lef
 
 implementation
 
-{ ------------------ glxDrawString ------------------ }
-{ -> basically the same as glxDrawNumber but with way }
-{    more characters.                                 }
-{ -> tool used to define characters: https://github.com/MeteorTheLizard/AutoIt-OpenGL-Character-to-Array-Converter-for-Freepascal }
-{                                                     }
+{ ----------------------------- glxDrawString ------------------------------ }
+{ -> basically the same as glxDrawNumber but with way more characters.       }
+{ -> tool used to define characters:                                         }
+{ https://github.com/MeteorTheLizard/AutoIt-OpenGL-Character-to-Array-Converter-for-Freepascal }
+{                                                                            }
 procedure glxDrawString(x: Single; y: Single; Num: AnsiString; Scale:Single; LeftBound:Boolean); stdcall;
 var
   tmp: PAnsiChar;
@@ -346,11 +346,8 @@ var
 begin
   tmp := PAnsichar(UpperCase(Num));
 
-
   CenterCorrection:= round(((Length(tmp)-1) * 5 * Scale)/2);
   CenterPositioning:=round((4*Scale)/2);
-
-
 
   for i := 0 to (Length(tmp)-1) do
   begin
@@ -452,8 +449,6 @@ begin
       else
         CurrentNumber:= 29;
     end;
-
-
 
     for dimPixY := 0 to 4 do
     begin

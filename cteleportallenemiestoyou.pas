@@ -73,7 +73,7 @@ function TTeleAETY.IsTeamBased(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $1E5C28)^;
+  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^; //uptodate 2023/08/13
   case (TeamValue) of
     0: Result := False;
     1: Result := False;

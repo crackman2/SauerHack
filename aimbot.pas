@@ -57,11 +57,9 @@ implementation
 { TAimbot }
 
 
-{ ---------- Aimbot Constructor ---------- }
-{ -> Assings pointers to the localplayer   }
-{    and enemy array                       }
-{ -> assings pointer to a value used to    }
-{    automatically fire (ShootByte)        }
+{ --------------------------- Aimbot Constructor --------------------------- }
+{ -> Assings pointers to the localplayer and enemy array                     }
+{ -> assings pointer to a value used to automatically fire (ShootByte)       }
 constructor TAimbot.Create(plr: PTPlayer; ens: PTEnArr);
 var
   ShootByteBase: Pointer;
@@ -70,18 +68,17 @@ begin
   Sauerbase := Pointer(GetModuleHandle('sauerbraten.exe'));
   ply := plr;
   en := ens;
-  ShootByteBase := Pointer(Sauerbase + $216454);    //UPDATE ALL OFFSETS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  ShootByteBase := Pointer(cardinal(ShootByteBase^) + $1E0);
+  ShootByteBase := Pointer(Sauerbase + $317110);    //uptodate 2023/08/13
+  ShootByteBase := Pointer(cardinal(ShootByteBase^) + $1D8); //uptodate 2023/08/13
   ShootByte := PByte(ShootByteBase);
   Fog := Pointer(Sauerbase + $297C88);
 end;
 
 
 
-{ ---------- World to Screen ---------- }
-{ -> Projects 3D World Point onto 2D    }
-{    screen                             }
-{ -> Used here for target selection     }
+{ ----------------------------- World to Screen ---------------------------- }
+{ -> Projects 3D World Point onto 2D screen                                  }
+{ -> Used here for target selection                                          }
 function TAimbot.glW2S(plypos: RVec3): boolean; stdcall;
 var
   Clip: RVec4;
@@ -93,7 +90,7 @@ var
   ViewMatrx: MVPmatrix;
 begin
 
-  VMBase := GetModuleHandle('sauerbraten.exe') + $297AF0;
+  VMBase := GetModuleHandle('sauerbraten.exe') + $399000; //uptodate 2023/08/13
   for i := 0 to 15 do
   begin
     ViewMatrx[i] := PSingle(VMBase + i * 4)^;
@@ -129,14 +126,13 @@ end;
 
 
 
-{ ---------- Check for GameMode ---------- }
-{ -> Determines if current game mode is    }
-{    team based                            }
+{ --------------------------- Check for GameMode --------------------------- }
+{ -> Determines if current game mode is team based                           }
 function TAimbot.IsTeamBased(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $1E5C28)^;
+  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^; //uptodate 2023/08/13
   case (TeamValue) of
     0: Result := False;
     1: Result := False;
@@ -165,15 +161,15 @@ begin
 
 end;
 
-{ -------------------- Get Best Target -------------------- }
-{ -> projects each valid entities location onto the screen  }
-{    to determine which one is closest to the crosshair     }
-{ -> other criteria are:                                    }
-{          - targets team (if game mode is team based)      }
-{          - health                                         }
-{          - is target spectating                           }
-{ -> the best target is not in your team, alive, not        }
-{    spectating and closed to your crosshair                }
+{ ----------------------------- Get Best Target ---------------------------- }
+{ -> projects each valid entities location onto the screen to determine      }
+{    which one is closest to the crosshair                                   }
+{ -> other criteria are:                                                     }
+{          - targets team (if game mode is team based)                       }
+{          - health                                                          }
+{          - is target spectating                                            }
+{ -> the best target is not in your team, alive, not spectating and closed   }
+{    to your crosshair                                                       }
 function TAimbot.GetBestTarget(plrcnt: cardinal): integer; stdcall;
 var
   dist: single;
@@ -214,9 +210,9 @@ begin
 end;
 
 
-{ --------------------- Aim Function ---------------------- }
-{ -> uses trigenometry to aim at target                     }
-{ -> the index determines which enemy to aim at             }
+{ ------------------------------ Aim Function ------------------------------ }
+{ -> uses trigenometry to aim at target                                      }
+{ -> the index determines which enemy to aim at                              }
 procedure TAimbot.Aim(index: integer); stdcall;
 var
   dx: single;
@@ -236,16 +232,16 @@ begin
   end;
 end;
 
-{ -------------------- AutoTrigger / Triggerbot -------------------- }
-{ -> Checks PixelColor in the center of the screen. if it is equal   }
-{    RGB($00,$FF,$02) it triggers using the ShootByte                }
-{ -> change enemy textures to be entirely green ($00FF00), ingame    }
-{    they should show up as $00FF02 of some reason. make sure to     }
-{    disable any shading, postprocessing or anything else that       }
-{    shades the models. they have to be fullbright. also disable     }
-{    ragdolling and dead player models in general to avoid misfiring }
-{ -> reliability is iffy at best because fog messes with colors but  }
-{    those can be disabled too (HAS BEEN ADDED)                      }
+{ ------------------------ AutoTrigger / Triggerbot ------------------------ }
+{ -> Checks PixelColor in the center of the screen. if it is equal           }
+{    RGB($00,$FF,$02) it triggers using the ShootByte                        }
+{ -> change enemy textures to be entirely green ($00FF00), ingame they       }
+{    should show up as $00FF02 of some reason. make sure to disable any      }
+{    shading, postprocessing or anything else that shades the models. they   }
+{    have to be fullbright. also disable ragdolling and dead player  models  }
+{    in general to avoid misfiring                                           }
+{ -> reliability is iffy at best because fog messes with colors but those    }
+{    can be disabled too (HAS BEEN ADDED)                                    }
 procedure TAimbot.AutoTrigger(); stdcall;
 var
   pixel: array[0..3] of byte;

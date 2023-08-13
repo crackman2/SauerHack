@@ -19,12 +19,14 @@ type
     constructor Create(plr: PTPlayer; enr: PTEnArr; PlrCounter: cardinal);
     procedure DrawLine(StartX: single; StartY: single; EndX: single;
       EndY: single; LineTickness: single); stdcall;
-    procedure DrawBox(top: single; left: single; bottom: single; right: single;
-      LineThickness: single); stdcall;
+    procedure DrawBox(top: single; left: single; bottom: single;
+      right: single; LineThickness: single); stdcall;
     function glW2S(plypos: RVec3): boolean; stdcall;
     procedure DrawESP(); stdcall;
     function IsTeamBased(): boolean; stdcall;
     procedure Draw3DBox(Index: cardinal; lw: single); stdcall;
+
+
 
 
   public
@@ -306,9 +308,13 @@ var
   i: cardinal;
   VMBase: cardinal;
   ViewMatrx: MVPmatrix;
+  //DebugOffset: Cardinal;
 begin
 
-  VMBase := GetModuleHandle('sauerbraten.exe') + $297AF0;
+  VMBase := GetModuleHandle('sauerbraten.exe') + $399000;
+  //DebugOffset:= GetModuleHandle('sauerbraten.exe') + $398FC0;
+  //VMBase := VMBase + DebugOffset;
+
   for i := 0 to 15 do
   begin
     ViewMatrx[i] := PSingle(VMBase + i * 4)^;
@@ -349,7 +355,8 @@ function TESP.IsTeamBased(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $1E5C28)^;
+  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^;
+  //uptodate 2023/08/13
   case (TeamValue) of
     0: Result := False;
     1: Result := False;

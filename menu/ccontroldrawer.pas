@@ -79,6 +79,7 @@ begin
     (txtscale / 2), txt, txtscale, True);
 end;
 
+
 procedure TCheckbox.SwitchCheckedState;
 begin
   bChecked := not bChecked;
@@ -122,10 +123,10 @@ end;
 procedure TCheckbox.DrawBox(top: single; left: single; bottom: single;
   right: single; LineThickness: single); stdcall;
 begin
-  DrawLine(left, top, right, top, LineThickness); //upper border
-  DrawLine(left, top, left, bottom, LineThickness); //left border
+  DrawLine(left, top, right, top, LineThickness);       //upper border
+  DrawLine(left, top, left, bottom, LineThickness);     //left border
   DrawLine(left, bottom, right, bottom, LineThickness); //bottom
-  DrawLine(right, top, right, bottom, LineThickness);//right
+  DrawLine(right, top, right, bottom, LineThickness);   //right
 end;
 
 end.

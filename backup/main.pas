@@ -42,8 +42,8 @@ var
 
 
   { ------------------------------ TATY Object ----------------------------- }
-  { -> teleport everyone to you       }
-  { -> may cause death                }
+  { -> teleport everyone to you                                              }
+  { -> may cause death                                                       }
   taty: TTeleAETY;
   EnableTATY:PByte=nil;
 
@@ -117,7 +117,6 @@ begin
 
 
   { ----------------------------- Init Pointers ---------------------------- }
-  {                     }
   LockAim:= PByte         (cave + $3C0);
   ReleasedRBM:=PByte      (cave + $3C8);
   MenuPosX:=Pointer       (cave + $500);
@@ -138,8 +137,8 @@ begin
     EnableLockAim^:=1;
     EnableMenu:=PByte(GetModuleHandle('sauerbraten.exe') + $30D0E8); //uptodate 09/08/2023
     PByte(EnableESP-$4)^:=1;
-    PSingle(MenuPosX)^:=100;
-    PSingle(MenuPosY)^:=100;
+    PSingle(MenuPosX)^:=50;
+    PSingle(MenuPosY)^:=50;
   end;
 
 
@@ -150,23 +149,23 @@ begin
   { -> sets the index and stuff..                                            }
   { -> calls constructor for the esp object                                  }
   { -> calls constructor for the aimbot object                               }
-  //Player := TPlayer.Create(0); COMMENTED FOR DEBUG
-  //Player.Index := 0;           COMMENTED FOR DEBUG
-  //Player.GetPlayerData();       COMMENTED FOR DEBUG
-  //esp := TESP.Create(@Player, @Enemy, PlayerCount); COMMENTED FOR DEBUG
+  Player := TPlayer.Create(0);
+  Player.Index := 0;
+  Player.GetPlayerData();
+  esp := TESP.Create(@Player, @Enemy, PlayerCount);
   //Aimer := TAimbot.Create(@Player, @Enemy);             COMMENTED FOR DEBUG
   //taty := TTeleAETY.Create(@Player, @Enemy, PlayerCount);   COMMENTED FOR DEBUG
-  //noclip := TNoclip.Create;                                COMMENTED FOR DEBUG
+  noclip := TNoclip.Create;
   Menu:=TMenu.Create(PSingle(MenuPosX)^,PSingle(MenuPosY)^,355,150,'SauerHack Reloaded',2.5,EnableESP);
   //FlagStealer:=TFlagStealer.Create(); COMMENTED FOR DEBUG
-  //i := 1;                     COMMENTED FOR DEBUG
-  //while (i <= PlayerCount) do   COMMENTED FOR DEBUG
-  //begin                          COMMENTED FOR DEBUG
-  //  Enemy[i] := TPlayer.Create(i); COMMENTED FOR DEBUG
-  //  Enemy[i].Index := i;          COMMENTED FOR DEBUG
-  //  Enemy[i].GetPlayerData();      COMMENTED FOR DEBUG
-  //  Inc(i);                       COMMENTED FOR DEBUG
-  //end;
+  i := 1;
+  while (i <= PlayerCount) do
+  begin
+    Enemy[i] := TPlayer.Create(i);
+    Enemy[i].Index := i;
+    Enemy[i].GetPlayerData();
+    Inc(i);
+  end;
 
 
 
@@ -259,9 +258,7 @@ begin
   { -> lets you fly around the map                                           }
   { -> toggles with 'V'                                                      }
   EnableNoclip := PByte(cave + $3D0);
-  //EnableNoclip := PByte(dwLibMikModBase + $0D0);
   NoclipButtonPressed := PByte(cave + $3D8);
-  //NoclipButtonPressed := PByte(dwLibMikModBase + $0D8);
   if (GetAsyncKeyState(VK_V) <> 0) and (NoclipButtonPressed^ = 0) and
     (EnableNoclip^ = 0) and (EnableNoclipping^=1) then
   begin
@@ -281,23 +278,21 @@ begin
 
   if EnableNoclip^ = 1 then
   begin
-    //noclip.PollControls;           COMMENTED FOR DEBUG
-    //noclip.NOPFalling(True);       COMMENTED FOR DEBUG
+    noclip.PollControls;
+    noclip.NOPFalling(True);
   end
   else
   begin
-    //noclip.NOPFalling(False);        COMMENTED FOR DEBUG
+    noclip.NOPFalling(False);        COMMENTED FOR DEBUG
   end;
 
 
 
   { ---------------------------- Debug Screen F1 --------------------------- }
   { -> Shows inforamtion                                                     }
-  { -> toggles with 'V'                                                      }
+  { -> toggles with 'F1'                                                      }
   EnableDebug := PByte(cave + $3E0);
-  //EnableDebug := PByte(dwLibMikModBase + $0E0);
   DebugButtonPressed := PByte(cave + $3E8);
-  //DebugButtonPressed := PByte(dwLibMikModBase + $0E8);
   if (GetAsyncKeyState(VK_F1) <> 0) and (DebugButtonPressed^ = 0) and
     (EnableDebug^ = 0) then
   begin
@@ -324,7 +319,7 @@ begin
 
   { ----------------------------- Drawing ESP ------------------------------ }
   { -> draws red boxes around enemy player                                   }
-  //if EnableESP^=1 then esp.DrawESP();        COMMENTED FOR DEBUG
+  if EnableESP^=1 then esp.DrawESP();
 
 
 
@@ -347,25 +342,22 @@ begin
   { -> prevent leaks. doesn't work                                           }
   { -> TO DO: FIX THIS///Done..                                              }
   //Aimer.Destroy;                            COMMENTED FOR DEBUG
-  //Player.Destroy;                       COMMENTED FOR DEBUG
-  //esp.Destroy;                      COMMENTED FOR DEBUG
+  Player.Destroy;
+  esp.Destroy;
   //taty.Destroy;                 COMMENTED FOR DEBUG
-  //noclip.Destroy;             COMMENTED FOR DEBUG
+  noclip.Destroy;
   Menu.Destroy;
   //FlagStealer.Destroy;    COMMENTED FOR DEBUG
-  //i := 1;       COMMENTED FOR DEBUG
-  //while (i <= PlayerCount) do COMMENTED FOR DEBUG
-  //begin          COMMENTED FOR DEBUG
-    //Enemy[i].Destroy;    COMMENTED FOR DEBUG
-    //Inc(i);    COMMENTED FOR DEBUG
-  //end;      COMMENTED FOR DEBUG
-
+  i := 1;
+  while (i <= PlayerCount) do
+  begin
+    Enemy[i].Destroy;
+    Inc(i);
+  end;
 
 
   { ------------------------------ Debug Line ------------------------------ }
-  { -> confirms hack                                                         }
-  {    is active                                                             }
-
+  { -> confirms hack is active                                               }
   glColor3f(0.3, 1.0, 0.3);
   glLineWidth(5);
   glBegin(GL_LINES);
@@ -424,6 +416,7 @@ begin
       glxDrawString(X, Y+75+i*15, Help[i], 2, True);
   end;
 end;
+
 { -------------------------- glEnter2DDrawingMode -------------------------- }
 { -> sets out context up to draw properly                                    }
 { -> glGetIntegerv and glOrtho allow us to use usual x,y pixel coordinates   }

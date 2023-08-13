@@ -47,7 +47,7 @@ begin
   { ------- Setup Pointers To Writiable Player Positon ------- }
   { -> not the same as the one in the entity list              }
   { -> has some implications for taty          ..or mabye not  }
-  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $213EA8);
+  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $317110); //uptodate 2023/08/12
   addposx := Pointer(Original^) + $30;
   addposy := addposx + $4;
   addposz := addposx + $8;
@@ -61,7 +61,7 @@ begin
   posz := addposz;
 
   { -------- Init Variables -------- }
-  FPS := Pointer(GetModuleHandle('sauerbraten.exe') + $2A0710);
+  FPS := Pointer(GetModuleHandle('sauerbraten.exe') + $39A644); //uptodate 2023/08/12
   SpeedNormal := 200 / PInteger(FPS)^;
   SpeedFast := SpeedNormal * 3;
   SpeedSlow := SpeedNormal / 3;
@@ -89,17 +89,22 @@ begin
     MovePlayer('U');
 
 
-  ResetFallSpeed := Pointer(PCardinal(GetModuleHandle('sauerbraten.exe') +
-    $216454)^ + $20);
-  PSingle(ResetFallSpeed)^ := 0;
+  ResetFallSpeed := Pointer(PCardinal(GetModuleHandle('sauerbraten.exe') + $216454)^ + $20);
+  //PSingle(ResetFallSpeed)^ := 0;    //CURRENTLY BROKEN
   glColor3f(0.8, 0.8, 0.8);
   glGetIntegerv(GL_VIEWPORT, viewp);
   glxDrawString(20, viewp[3] - 115, 'Noclip active', 2, True);
 end;
 
+
+{ ------------------------------ NOP Falling ------------------------------- }
+{ -> This function replaces the the instructions to move the player when     }
+{    falling with NOP (no operation) aka $90                                 }
+{ -> the parameter 1 will kill the code, replacing the sections with NOP     }
+{ -> the parameter 0 will restore the original code, enabling gravity        }
 procedure TNoclip.NOPFalling(State1Kill0Fix: boolean); stdcall;
 var
-  OriginalCodeZ: array [0..2] of byte = ($89, $46, $38);
+  OriginalCodeZ: array [0..2] of byte = ($D8, $6B, $20);
   OriginalCodeXY: array [0..4] of byte = ($66, $0F, $D6, $46, $30);
   SauerBase: Pointer;
   PosWriter: Pointer;
@@ -113,27 +118,27 @@ begin
   if State1Kill0Fix = False then
   begin //Fixing code
     { ---- Z Axis ---- }
-    PosWriter := Pointer(SauerBase + $E88E2);
-    VirtualProtect(PosWriter, 3, PAGE_EXECUTE_WRITECOPY, Garbage);
+    PosWriter := Pointer(SauerBase + $A5EC0);  //uptodate 2023/08/13
+    VirtualProtect(PosWriter, 3, PAGE_EXECUTE_READWRITE, Garbage);
     TheKiller := PosWriter;
     for i := 0 to 2 do
     begin
-      PByte(TheKiller + i)^ := OriginalCodeZ[i];
+      PByte(TheKiller + i)^ := OriginalCodeZ[i];   //CURRENTLY BROKEN
     end;
 
     { ---- X/Y Axis ---- }
-    PosWriter := Pointer(SauerBase + $E88DD);
+    PosWriter := Pointer(SauerBase + $E88DD);   //FIX THIS
     TheKiller := PosWriter;
     for i := 0 to 4 do
     begin
-      PByte(TheKiller + i)^ := OriginalCodeXY[i];
+      //PByte(TheKiller + i)^ := OriginalCodeXY[i];   //CURRENTLY BROKEN
     end;
   end
   else
   begin //Killing Code
     { ---- Z Axis ---- }
-    PosWriter := Pointer(SauerBase + $E88E2);
-    VirtualProtect(PosWriter, 3, PAGE_EXECUTE_WRITECOPY, Garbage);
+    PosWriter := Pointer(SauerBase + $A5EC0);  //uptodate 2023/08/13
+    VirtualProtect(PosWriter, 3, PAGE_EXECUTE_READWRITE, Garbage);
     TheKiller := PosWriter;
     for i := 0 to 2 do
     begin
@@ -141,11 +146,11 @@ begin
     end;
 
     { ---- X/Y Axis ---- }
-    PosWriter := Pointer(SauerBase + $E88DD);
+    PosWriter := Pointer(SauerBase + $E88DD); //FIX THIS
     TheKiller := PosWriter;
     for i := 0 to 4 do
     begin
-      PByte(TheKiller + i)^ := $90;
+      //PByte(TheKiller + i)^ := $90;   //CURRENTLY BROKEN
     end;
 
   end;
@@ -158,9 +163,9 @@ begin
     'W':
     begin
       posx^ := posx^ + (cos((camx^ + 90) / 57.2958) * SpeedCurrent) *
-        (1.57079576 - (abs((camy^ / 57.2958))));
+        (1.57079576 -  (abs((camy^ / 57.2958))));
       posy^ := posy^ + (sin((camx^ + 90) / 57.2958) * SpeedCurrent) *
-        (1.57079576 - (abs((camy^ / 57.2958))));
+        (1.57079576 -  (abs((camy^ / 57.2958))));
       posz^ := posz^ + (sin((camy^ / 57.2958)) * SpeedCurrent);
     end;
     'A':
@@ -171,9 +176,9 @@ begin
     'S':
     begin
       posx^ := posx^ + (cos((camx^ - 90) / 57.2958) * SpeedCurrent) *
-        (1.57079576 - (abs((camy^ / 57.2958))));
+        (1.57079576 -  (abs((camy^ / 57.2958))));
       posy^ := posy^ + (sin((camx^ - 90) / 57.2958) * SpeedCurrent) *
-        (1.57079576 - (abs((camy^ / 57.2958))));
+        (1.57079576 -  (abs((camy^ / 57.2958))));
       posz^ := posz^ - (sin((camy^ / 57.2958)) * SpeedCurrent);
     end;
     'D':

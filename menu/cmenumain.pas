@@ -21,10 +21,7 @@ type
     procedure InitMain;
     procedure CheckDragWindow(mx:Single; my:Single);
 
-
   public
-
-
     mainwin: TWindow;
     menupos: RVec2;
     menudim: RVec2;
@@ -70,7 +67,6 @@ var
 begin
   mainwin := TWindow.Create(menupos, menudim, menutitle);
 
-
   CheckBoxStrings[0]:='Enable ESP';
   CheckBoxStrings[1]:='Enable Aimbot';
   CheckBoxStrings[2]:='Enable Lockaim';
@@ -92,7 +88,6 @@ var
     MenuPosX:Pointer=nil;
     MenuPosY:Pointer=nil;
 begin
-
     Dragging:=Pointer (cave + $508);
     MouseXOri:=Pointer(cave + $50C);
     MouseYOri:=Pointer(cave + $510);
@@ -133,12 +128,12 @@ var
   PMouseY: Pointer;
   C:PCardinal=nil;
 
-  MouseVec: array [0..3] of array [0..1] of single = ///
-   {//////////////////////}((0, 0),/////
-   {//////////////////////}(17, 17),/////
-    {//////////////////////}(8, 21),/////
-    {//////////////////////}(0, 27) /////
-    {//////////////////////});///////////
+  MouseVec: array [0..3] of array [0..1] of single =
+    {//////////////////////}((0,  0),/////
+    {//////////////////////}(17, 17),/////
+    {//////////////////////}( 8, 21),/////
+    {//////////////////////}( 0, 27) /////
+    {//////////////////////});////////////
   i:Cardinal;
   FPS:Pointer;
 begin
@@ -160,7 +155,6 @@ begin
   glVertex2f(MouseX+MouseVec[i][0],MouseY+MouseVec[i][1]);
   end;
   glEnd();
-
 
   glColor3f(0.1,0.2,0.1);
   glLineWidth(1);
@@ -190,8 +184,6 @@ begin
   MouseX:=PSingle(PMouseX)^*viewp[2];
   MouseY:=PSingle(PMouseY)^*viewp[3];
 
-
-
   if (GetAsyncKeyState($01) <> 0) and (MReleaser^=0) then begin
     Clicked:=True;
     MReleaser^:=1;
@@ -208,9 +200,6 @@ begin
   end;
 
   CheckDragWindow(MouseX,MouseY);
-
 end;
-
-
 
 end.

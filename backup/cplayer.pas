@@ -25,19 +25,20 @@ type
 
 
   public
-    pos: RVec3;     //World Position
+    pos: RVec3;                        //World Position
     TeamString: array[0..99] of char;  //Team name
     TeamStringLength: integer;
     PlayerNameString: array[0..99] of char;
     PlayerNameStringLength: integer;
 
-    PlayerBase: Pointer; {-> Pointer to Player //!! IMPORTANT !! Pointers must be of  }
-                         {   type Pointer or else adding offsets breaks for some      }
-                         {   reason :( Cast Type when dereferencing                   }
-                         {   (e.g. PByte(VarHoldingPointerValue)^:=$100;)             }
+    { -------------------------- Pointer to Player ------------------------- }
+    {-> IMPORTANT !! Pointers must be of type Pointer or else adding offsets }
+    {   breaks for some reason :( Cast Type when dereferencing               }
+    {   (e.g. PByte(VarHoldingPointerValue)^:=$100;)                         }
+    PlayerBase: Pointer;
 
-    Index: cardinal;    //Position in EntityList (0 is localplayer)
-    hp: integer;        //Health
+    Index: cardinal;     //Position in EntityList (0 is localplayer)
+    hp: integer;         //Health
     ClientNumber: DWORD; //ClientNumber (CN) (unused)
     IsSpectating: boolean;
     BaseAddress: Pointer;
@@ -57,11 +58,12 @@ var
   EntityList: Pointer; //Pointer to EntityList
   List: Pointer;       //Actual List aka Pointer to first entity (the player)
 begin
-  { ---------------------- Setting PlayerBase ---------------------- }
-  { -> $29CD34 is the offset from sauerbraten.exe to the EntityList  }
-  {    Pointer                                                       }
-  { -> Index determines which entry in the list should be read       }
-  EntityList := Pointer(GetModuleHandle('sauerbraten.exe') + $29CD34);
+  { -------------------------- Setting PlayerBase -------------------------- }
+  { -> $29CD34 is the offset from sauerbraten.exe to the EntityList          }
+  {    Pointer                                                               }
+  { -> Index determines which entry in the list should be read               }
+  EntityList := Pointer(GetModuleHandle('sauerbraten.exe') + $3C9AD0);
+  //uptodate 2023/08/12
   List := Pointer(EntityList^);
   PlayerBase := Pointer(Pointer(List + Index * $4)^);
 
@@ -78,19 +80,17 @@ begin
 
   if PlayerBase <> PDWORD(0) then
   begin
-    { ------------------------ Read PlayerBase ----------------------- }
-    { -> for debug                                                     }
+    { --------------------------- Read PlayerBase -------------------------- }
+    { -> for debug                                                           }
     BaseAddress := Pointer(PlayerBase);
 
 
 
-    { ----------------------- Reading Position ----------------------- }
-    { -> offsets $0, $4, $8 correspond to the players X, Y and Z       }
-    {    Position                                                      }
-    { -> this is the position located at the feet of the player as     }
-    {    opposed to the actual camera position (specifically Z)        }
-    {    but this doesn't really matter because you can't duck in this }
-    {    game                                                          }
+    { -------------------------- Reading Position -------------------------- }
+    { -> offsets $0, $4, $8 correspond to the players X, Y and Z position    }
+    { -> this is the position located at the feet of the player as           }
+    {    opposed to the actual camera position (specifically Z)              }
+    {    but this doesn't really matter because you can't duck in this game  }
     pos.x := PSingle(PlayerBase + $0)^;
     pos.y := PSingle(PlayerBase + $4)^;
     pos.z := PSingle(PlayerBase + $8)^;
@@ -98,11 +98,11 @@ begin
 
 
 
-    { -------------------------- Team String ------------------------- }
-    { -> reading the Team name to differentiate between enemies and    }
-    {    friends. $354 is the offset to team string                    }
-    { -> cycle through all chars of the string until we hit the null   }
-    {    termination                                                   }
+    { ----------------------------- Team String ---------------------------- }
+    { -> reading the Team name to differentiate between enemies and friends  }
+    {    $354 is the offset to team string                                   }
+    { -> cycle through all chars of the string until we hit the null         }
+    {    termination                                                         }
     TeamStringPointer := Pointer(PlayerBase + $354); //fuck this
     TeamStringCounter := 0;
     TeamStringLength := 0;
@@ -111,15 +111,15 @@ begin
       TeamString[TeamStringCounter] := PChar(TeamStringPointer)[TeamStringCounter];
       Inc(TeamStringCounter);
     end;
-    { - Null Termination. I hope nothing important was overwritten - }
+    { ----- Null Termination. I hope nothing important was overwritten ----- }
     TeamString[TeamStringCounter + 1] := char(0);
     TeamStringLength := TeamStringCounter + 1;
 
 
-    { -------------------------- Name String ------------------------- }
-    { -> reading the playername to display on ESP                      }
-    { -> cycle through all chars of the string until we hit the null   }
-    {    termination                                                   }
+    { ----------------------------- Name String ---------------------------- }
+    { -> reading the playername to display on ESP                            }
+    { -> cycle through all chars of the string until we hit the null         }
+    {    termination                                                         }
     PlayerNamePointer := Pointer(PlayerBase + $250); //fuck this
     PlayerNameCounter := 0;
     PlayerNameStringLength := 0;
@@ -128,31 +128,32 @@ begin
       PlayerNameString[PlayerNameCounter] := PChar(PlayerNamePointer)[PlayerNameCounter];
       Inc(PlayerNameCounter);
     end;
-    { - Null Termination. I hope nothing important was overwritten - }
+    { ----- Null Termination. I hope nothing important was overwritten ----- }
     PlayerNameString[PlayerNameCounter + 1] := char(0);
     PlayerNameStringLength := PlayerNameCounter + 1;
 
 
 
 
-    { ----------------------- Enemy Related Data --------------------- }
+    { -------------------------- Enemy Related Data ------------------------ }
     if Index > 0 then
     begin
-      { ---------- Read Health --------- }
-      { -> relevant for target selection }
-      { -> offset from playerbase = $15C }
+      { ---------------------------- Read Health --------------------------- }
+      { -> relevant for target selection                                     }
+      { -> offset from playerbase = $15C                                     }
       hp := PInteger(PlayerBase + $15C)^;
 
 
-      { ------------ Read CN ----------- }
-      { -> relevant for identification   }
-      { -> offset from playerbase = $1B4 }
+      { ------------------------------ Read CN ----------------------------- }
+      { -> client number                                                     }
+      { -> relevant for identification                                       }
+      { -> offset from playerbase = $1B4                                     }
       ClientNumber := PDWORD(PlayerBase + $1B4)^;
 
 
-      { -------- Read Spectating ------- }
-      { -> relevant for target selection }
-      { -> offset from playerbase = $7C }
+      { -------------------------- Read Spectating ------------------------- }
+      { -> relevant for target selection                                     }
+      { -> offset from playerbase = $7C                                      }
       if PBYTE(PlayerBase + $7C)^ = $5 then
         IsSpectating := True;
     end; // Enemy Related Data
@@ -168,13 +169,14 @@ var
   addPSingleCamV: PSingle;
 
 begin
-  { -------------------------- Set Camera Pointer ------------------------- }
-  { -> There is a different struct for engine related settings that is not  }
-  {    within the entity list. there we can set the actual camera angles    }
-  {    offset $216454 is a pointer to this struct. $3C is the offset to the }
-  {    horizontal camera angle and the vertical one is right next to it     }
+  { --------------------------- Set Camera Pointer ------------------------- }
+  { -> There is a different struct for engine related settings that is not   }
+  {    within the entity list. there we can set the actual camera angles     }
+  {    offset $216454 is a pointer to this struct. $3C is the offset to the  }
+  {    horizontal camera angle and the vertical one is right next to it      }
 
-  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $216454);
+  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $13DB1A4);
+  //uptodate 2023/08/12
   addCamH := Pointer(Original^) + $3C;
   addCamV := addcamH + $4;
 
@@ -202,12 +204,12 @@ procedure TPlayer.CalibrateMouse; stdcall;
 var
   CurPos: POINT;
 begin
-  { -------------------------- Cursor Position ------------------------- }
-  { -> Essentially finds the center of the game window via a very crude  }
-  {    Method that requires the player to hold still while ingame in     }
-  {    order to center the mouse cursor (center of crosshair)            }
-  { -> the position is used for the PixelSearch triggerbot. it triggers  }
-  {    when the pixel to check is the right color                        }
+  { ---------------------------- Cursor Position --------------------------- }
+  { -> Essentially finds the center of the game window via a very crude      }
+  {    Method that requires the player to hold still while ingame in         }
+  {    order to center the mouse cursor (center of crosshair)                }
+  { -> the position is used for the PixelSearch triggerbot. it triggers      }
+  {    when the pixel to check is the right color                            }
   GetCursorPos(CurPos);
   CursorPosition.x := CurPos.x;
   CursorPosition.y := CurPos.y;
@@ -215,14 +217,12 @@ end;
 
 constructor TPlayer.Create(TheIndex: cardinal);
 begin
-  { ----- Set Index In EntityList ----- }
-  { -> 0 is localplayer                 }
+  { ------------------------ Set Index In EntityList ----------------------- }
+  { -> 0 is localplayer                                                      }
   Index := TheIndex;
 
-  { ---------- Init Variables --------- }
+  { ----------------------------- Init Variables --------------------------- }
   IsSpectating := False;
 end;
 
 end.
-
-

@@ -307,9 +307,13 @@ var
   i: cardinal;
   VMBase: cardinal;
   ViewMatrx: MVPmatrix;
+  //DebugOffset: Cardinal;
 begin
 
-  VMBase := GetModuleHandle('sauerbraten.exe') + $297AF0;
+  VMBase := GetModuleHandle('sauerbraten.exe') + $399000;
+  //DebugOffset:= GetModuleHandle('sauerbraten.exe') + $398FC0;
+  //VMBase := VMBase + DebugOffset;
+
   for i := 0 to 15 do
   begin
     ViewMatrx[i] := PSingle(VMBase + i * 4)^;
@@ -350,7 +354,7 @@ function TESP.IsTeamBased(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $1E5C28)^;
+  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^; //uptodate 2023/08/13
   case (TeamValue) of
     0: Result := False;
     1: Result := False;

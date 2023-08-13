@@ -24,6 +24,7 @@ type
     procedure TeleportAllEnemiesInfrontOfYou(); stdcall;
     function IsTeamBased(): boolean; stdcall;
 
+
   public
     ply: PTPlayer;
     en: PTEnArr;
@@ -58,6 +59,7 @@ begin
       if (en^[i].TeamString[0] <> ply^.TeamString[0]) or (not IsTeamBased()) then
       begin
         en^[i].SetPos(ply^.pos.x, ply^.pos.y, ply^.pos.z);
+        en^[i].SetPosAlt(ply^.pos.x, ply^.pos.y, ply^.pos.z);
       end;
     end;
     Inc(i);
@@ -72,7 +74,8 @@ function TTeleAETY.IsTeamBased(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $1E5C28)^;
+  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^;
+  //uptodate 2023/08/13
   case (TeamValue) of
     0: Result := False;
     1: Result := False;
@@ -105,4 +108,3 @@ end;
 
 
 end.
-

@@ -5,28 +5,26 @@ unit CFlagStealer;
 interface
 
 uses
-  Classes, SysUtils, windows,
-
+  Classes, SysUtils, Windows,
   CPlayer, CustomTypes;
-
 
 type
 
   { TFlagStealer }
 
   TFlagStealer = class
-    Constructor Create();
+    constructor Create();
     procedure SpamTeleport();
 
   private
     function IsCTFMode(): boolean; stdcall;
-    public
-    RedFlagPointer:Pointer;
-    BlueFlagPointer:Pointer;
+  public
+    RedFlagPointer: Pointer;
+    BlueFlagPointer: Pointer;
 
-    FlipFlop:PByte;
+    FlipFlop: PByte;
 
-    PlyPos:PRVec3;
+    PlyPos: PRVec3;
   end;
 
 implementation
@@ -40,29 +38,29 @@ implementation
 { -> easily detected by server scripts and admins   }
 constructor TFlagStealer.Create();
 var
-  Sauerbase:Pointer;
-  PlayerPosStruct:Pointer;
-  Original:Pointer;
-  dwLibMikModBase:DWORD;
+  Sauerbase: Pointer;
+  PlayerPosStruct: Pointer;
+  Original: Pointer;
+  dwLibMikModBase: DWORD;
 begin
-  Sauerbase:=Pointer(GetModuleHandle('sauerbraten.exe'));
+  Sauerbase := Pointer(GetModuleHandle('sauerbraten.exe'));
   { ------ View Main.pas for more info ------ }
-  dwLibMikModBase:=GetModuleHandle('libmikmod-2.dll')+$35090);
+  dwLibMikModBase := GetModuleHandle('libmikmod-2.dll') + $35090;
   //FlipFlop:=PByte($10700);
-  FlipFlop:=PByte(dwLibMikModBase + $400);
+  FlipFlop := PByte(dwLibMikModBase + $400);
 
 
-  Original:=Pointer(Sauerbase + $29D200);
-  BlueFlagPointer:=Pointer(Original^) + $88;
+  Original := Pointer(Sauerbase + $29D200);
+  BlueFlagPointer := Pointer(Original^) + $88;
 
-  Original:=Pointer(Sauerbase + $29D200);
-  RedFlagPointer:=Pointer(Original^) + $18;
+  Original := Pointer(Sauerbase + $29D200);
+  RedFlagPointer := Pointer(Original^) + $18;
 
 
 
   Original := Pointer(Sauerbase + $213EA8);
   PlayerPosStruct := Pointer(Original^) + $30;
-  PlyPos:=PlayerPosStruct;
+  PlyPos := PlayerPosStruct;
 
 end;
 
@@ -70,18 +68,21 @@ end;
 { -> FlipFlop decides which place to teleport to next}
 procedure TFlagStealer.SpamTeleport();
 begin
-  if IsCTFMode() then begin
-    if FlipFlop^=0 then begin
-      FlipFlop^:=1;
-      PlyPos^.x:=PSingle(RedFlagPointer + $0)^;
-      PlyPos^.y:=PSingle(RedFlagPointer + $4)^;
-      PlyPos^.z:=PSingle(RedFlagPointer + $8)^ + 15;
+  if IsCTFMode() then
+  begin
+    if FlipFlop^ = 0 then
+    begin
+      FlipFlop^ := 1;
+      PlyPos^.x := PSingle(RedFlagPointer + $0)^;
+      PlyPos^.y := PSingle(RedFlagPointer + $4)^;
+      PlyPos^.z := PSingle(RedFlagPointer + $8)^ + 15;
     end
-    else begin
-      FlipFlop^:=0;
-       PlyPos^.x:=PSingle(BlueFlagPointer + $0)^;
-       PlyPos^.y:=PSingle(BlueFlagPointer + $4)^;
-       PlyPos^.z:=PSingle(BlueFlagPointer + $8)^ + 15;
+    else
+    begin
+      FlipFlop^ := 0;
+      PlyPos^.x := PSingle(BlueFlagPointer + $0)^;
+      PlyPos^.y := PSingle(BlueFlagPointer + $4)^;
+      PlyPos^.z := PSingle(BlueFlagPointer + $8)^ + 15;
     end;
   end;
 end;
@@ -104,4 +105,3 @@ begin
 end;
 
 end.
-

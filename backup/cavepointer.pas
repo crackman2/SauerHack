@@ -5,18 +5,17 @@ unit cavepointer;
 interface
 
 uses
-  Classes, SysUtils, gl, glu, windows;
+  Classes, SysUtils, gl, glu, Windows;
+
 var
-  { --------- cave pointer  -------- }
-  { -> main code cave pointer        }
-  { -> value set during hook setup   }
-  { -> cave starts right after the   }
-  {    jump back to wglSwapbuffers   }
-  cave:Pointer;
-  caveHDC:^HDC;
-  caveNewRC:^HGLRC;
+  { ----------------------------- cave pointer  ---------------------------- }
+  { -> main code cave pointer                                                }
+  { -> value set during hook setup                                           }
+  { -> cave starts right after the jump back to wglSwapbuffers               }
+  cave: Pointer;
+  caveHDC: HDC;
+  caveNewRC: HGLRC;
 
 implementation
 
 end.
-
