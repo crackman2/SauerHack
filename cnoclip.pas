@@ -15,17 +15,24 @@ type
     constructor Create;
     procedure PollControls; stdcall;
     procedure NOPFalling(State1Kill0Fix: boolean); stdcall;
+    procedure ZeroVelocities(); stdcall;
     procedure MovePlayer(Direction: char); stdcall;
 
   public
     addposx: Pointer;
     addposy: Pointer;
     addposz: Pointer;
+    addvelx: Pointer;
+    addvely: Pointer;
+    addvelz: Pointer;
     addcamx: Pointer;
     addcamy: Pointer;
     posx: PSingle;
     posy: PSingle;
     posz: PSingle;
+    velx: PSingle;
+    vely: PSingle;
+    velz: PSingle;
     camx: PSingle;
     camy: PSingle;
 
@@ -51,14 +58,20 @@ begin
   addposx := Pointer(Original^) + $30;
   addposy := addposx + $4;
   addposz := addposx + $8;
+  addvelx := Pointer(Original^) + $0C;
+  addvely := Pointer(Original^) + $10;
+  addvelz := Pointer(Original^) + $14;
   addcamx := addposx + $C;
   addcamy := addposx + $10;
 
-  camx := addcamx;
-  camy := addcamy;
   posx := addposx;
   posy := addposy;
   posz := addposz;
+  velx := addvelx;
+  vely := addvely;
+  velz := addvelz;
+  camx := addcamx;
+  camy := addcamy;
 
   { -------- Init Variables -------- }
   FPS := Pointer(GetModuleHandle('sauerbraten.exe') + $39A644); //uptodate 2023/08/12
@@ -71,7 +84,6 @@ end;
 procedure TNoclip.PollControls; stdcall;
 var
   viewp: array [0..3] of Glint;
-  ResetFallSpeed: Pointer;
 begin
   if GetAsyncKeyState(VK_LSHIFT) <> 0 then
     SpeedCurrent := SpeedFast;
@@ -88,9 +100,6 @@ begin
   if GetAsyncKeyState(VK_SPACE) <> 0 then
     MovePlayer('U');
 
-
-  ResetFallSpeed := Pointer(PCardinal(GetModuleHandle('sauerbraten.exe') + $216454)^ + $20);
-  //PSingle(ResetFallSpeed)^ := 0;    //CURRENTLY BROKEN
   glColor3f(0.8, 0.8, 0.8);
   glGetIntegerv(GL_VIEWPORT, viewp);
   glxDrawString(20, viewp[3] - 115, 'Noclip active', 2, True);
@@ -104,8 +113,9 @@ end;
 { -> the parameter 0 will restore the original code, enabling gravity        }
 procedure TNoclip.NOPFalling(State1Kill0Fix: boolean); stdcall;
 var
-  OriginalCodeZ: array [0..2] of byte = ($D8, $6B, $20);
-  OriginalCodeXY: array [0..4] of byte = ($66, $0F, $D6, $46, $30);
+  OriginalCodeZ: array [0..2] of byte = ($D8, $6B, $20); //uptodate 2023/08/13
+  OriginalCodeZDrift: array [0..2] of byte = ($89, $45, $38); //uptodate 2023/08/13
+  OriginalCodeXY: array [0..1] of byte = ($D8, $CA);     //uptodate 2023/08/13
   SauerBase: Pointer;
   PosWriter: Pointer;
   TheKiller: PByte;
@@ -123,16 +133,34 @@ begin
     TheKiller := PosWriter;
     for i := 0 to 2 do
     begin
-      PByte(TheKiller + i)^ := OriginalCodeZ[i];   //CURRENTLY BROKEN
+      PByte(TheKiller + i)^ := OriginalCodeZ[i];
     end;
 
-    { ---- X/Y Axis ---- }
-    PosWriter := Pointer(SauerBase + $E88DD);   //FIX THIS
+    { - Z Axis Drift - }
+    PosWriter := Pointer(SauerBase + $AE610);  //uptodate 2023/08/13
+    VirtualProtect(PosWriter, 3, PAGE_EXECUTE_READWRITE, Garbage);
     TheKiller := PosWriter;
-    for i := 0 to 4 do
+    for i := 0 to 2 do
     begin
-      //PByte(TheKiller + i)^ := OriginalCodeXY[i];   //CURRENTLY BROKEN
+      PByte(TheKiller + i)^ := OriginalCodeZDrift[i];
     end;
+
+    { ---- X Axis ---- }
+    PosWriter := Pointer(SauerBase + $A59FC);   //uptodate 2023/08/13
+    TheKiller := PosWriter;
+    for i := 0 to 1 do
+    begin
+      PByte(TheKiller + i)^ := OriginalCodeXY[i];
+    end;
+
+    { ---- Y Axis ---- }
+    PosWriter := Pointer(SauerBase + $A5A0C);   //uptodate 2023/08/13
+    TheKiller := PosWriter;
+    for i := 0 to 1 do
+    begin
+      PByte(TheKiller + i)^ := OriginalCodeXY[i];
+    end;
+
   end
   else
   begin //Killing Code
@@ -145,17 +173,43 @@ begin
       PByte(TheKiller + i)^ := $90;
     end;
 
-    { ---- X/Y Axis ---- }
-    PosWriter := Pointer(SauerBase + $E88DD); //FIX THIS
+    { - Z Axis Drift - }
+    PosWriter := Pointer(SauerBase + $AE610);  //uptodate 2023/08/13
+    VirtualProtect(PosWriter, 3, PAGE_EXECUTE_READWRITE, Garbage);
     TheKiller := PosWriter;
-    for i := 0 to 4 do
+    for i := 0 to 2 do
     begin
-      //PByte(TheKiller + i)^ := $90;   //CURRENTLY BROKEN
+      PByte(TheKiller + i)^ := $90;
+    end;
+
+    { ---- X Axis ---- }
+    PosWriter := Pointer(SauerBase + $A59FC); //FIX THIS
+    TheKiller := PosWriter;
+    for i := 0 to 1 do
+    begin
+      PByte(TheKiller + i)^ := $90;
+    end;
+
+    { ---- X Axis ---- }
+    PosWriter := Pointer(SauerBase + $A5A0C); //FIX THIS
+    TheKiller := PosWriter;
+    for i := 0 to 1 do
+    begin
+      PByte(TheKiller + i)^ := $90;
     end;
 
   end;
 
 end;
+
+
+procedure TNoclip.ZeroVelocities(); stdcall;
+begin
+  velx^:=0;
+  vely^:=0;
+  velz^:=0;
+end;
+
 
 procedure TNoclip.MovePlayer(Direction: char); stdcall;
 begin

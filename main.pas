@@ -85,7 +85,10 @@ var
 
 procedure MainFunc();
 procedure GetPlayerCount();
+procedure PollDebug();
 procedure ShowDebugMenu();
+procedure PollNoclip();
+procedure PollAimbot();
 procedure glEnter2DDrawingMode; stdcall;
 procedure glLeave2DDrawingMode; stdcall;
 
@@ -94,8 +97,6 @@ implementation
 procedure MainFunc();
 var
   i: cardinal; //for loop counter
-  ii: cardinal;
-
   oldGLContext:HGLRC;
 begin
   { ------------------------ Prepare OpenGL Drawing ------------------------ }
@@ -149,11 +150,10 @@ begin
   { -> sets the index and stuff..                                            }
   { -> calls constructor for the esp object                                  }
   { -> calls constructor for the aimbot object                               }
+  GetPlayerCount();
   Player := TPlayer.Create(0);
-  Player.Index := 0;
-  Player.GetPlayerData();
-  esp := TESP.Create(@Player, @Enemy, PlayerCount);
-  //Aimer := TAimbot.Create(@Player, @Enemy);             COMMENTED FOR DEBUG
+
+
   //taty := TTeleAETY.Create(@Player, @Enemy, PlayerCount);   COMMENTED FOR DEBUG
   noclip := TNoclip.Create;
   Menu:=TMenu.Create(PSingle(MenuPosX)^,PSingle(MenuPosY)^,355,150,'SauerHack Reloaded',2.5,EnableESP);
@@ -162,10 +162,22 @@ begin
   while (i <= PlayerCount) do
   begin
     Enemy[i] := TPlayer.Create(i);
-    Enemy[i].Index := i;
-    Enemy[i].GetPlayerData();
     Inc(i);
   end;
+
+  esp := TESP.Create(Player, Enemy, PlayerCount);
+  Aimer := TAimbot.Create(Player, Enemy);
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -176,73 +188,15 @@ begin
   { -> stops aiming when the enemy is dead                                   }
   { -> reclick hotkey to aim at next taget                                   }
   { -> this should really be its own                                         }
-  {    function....                                                          }
-  (*
-  if (EnableAimbot^=1) and (EnableLockAim^=1) then begin
-    if not (GetAsyncKeyState($1) <> 0) then
-      Aimer.ShootByte^ := $0;
-    if (GetAsyncKeyState($2) <> 0) then
-    begin
-      if ReleasedRBM^ = 1 then                          COMMENTED FOR DEBUG
-      begin
-        LockAim^ := 1;
-        CurrentBestTarget := Aimer.GetBestTarget(PlayerCount);
-        ReleasedRBM^ := 0;
-      end;
-    end
-    else
-    begin                                                         COMMENTED FOR DEBUG
-      ReleasedRBM^ := 1;
-    end;
-
-    if (LockAim^ = 1) and (ReleasedRBM^ = 0) then
-    begin
-      if Enemy[CurrentBestTarget] <> nil then
-      begin
-        if Enemy[CurrentBestTarget].hp <= 0 then
-        begin
-          LockAim^ := 0;
-        end                                                COMMENTED FOR DEBUG
-        else
-        begin
-          if GetAsyncKeyState(VK_O) <> 0 then
-          begin
-            //Debug Output. Show current targets pointer
-            // MessageBox(0, PChar('Current Target: 0x' +
-            //   IntToHex(DWORD(Enemy[CurrentBestTarget].PlayerBase), 8)), 'e', 0);
-          end;
-          Aimer.Aim(CurrentBestTarget);
-          Aimer.AutoTrigger();
-        end;
-      end
-      else
-      begin
-        LockAim^ := 0;
-      end;
-    end
-    else
-    begin
-      LockAim^ := 0;
-    end;
-  end;
-
-  if (EnableAimbot^=1) and (EnableLockAim^=0) then begin
-    if not (GetAsyncKeyState($1) <> 0) then
-      Aimer.ShootByte^ := $0;
-    if (GetAsyncKeyState($2) <> 0) then begin
-      Aimer.Aim(Aimer.GetBestTarget(PlayerCount));
-      Aimer.AutoTrigger();
-    end;
-  end;
-
-  *)
+  {    function....}
+  PollAimbot();
 
 
 
   { --------------------------------- TATY --------------------------------- }
   if (GetAsyncKeyState(VK_X) <> 0) and (EnableTATY^=1) then
   begin
-    //taty.TeleportAllEnemiesInfrontOfYou();COMMENTED FOR DEBUG
+    //taty.TeleportAllEnemiesInfrontOfYou();  COMMENTED FOR DEBUG
   end;
 
 
@@ -250,71 +204,20 @@ begin
   { -> teleport between flags                                                }
   { -> infinite points                                                       }
   if (GetAsyncKeyState(VK_P) <> 0) and (EnableFlagSteal^=1) then begin
-    //FlagStealer.SpamTeleport();    COMMENTED FOR DEBUG
+    //FlagStealer.SpamTeleport();             COMMENTED FOR DEBUG
   end;
 
 
   { -------------------------------- Noclip -------------------------------- }
   { -> lets you fly around the map                                           }
   { -> toggles with 'V'                                                      }
-  EnableNoclip := PByte(cave + $3D0);
-  NoclipButtonPressed := PByte(cave + $3D8);
-  if (GetAsyncKeyState(VK_V) <> 0) and (NoclipButtonPressed^ = 0) and
-    (EnableNoclip^ = 0) and (EnableNoclipping^=1) then
-  begin
-    EnableNoclip^ := 1;
-    NoclipButtonPressed^ := 1;
-  end;
-
-  if (GetAsyncKeyState(VK_V) <> 0) and (NoclipButtonPressed^ = 0) and
-    (EnableNoclip^ = 1) then
-  begin
-    EnableNoclip^ := 0;
-    NoclipButtonPressed^ := 1;
-  end;
-
-  if (GetAsyncKeyState(VK_V) = 0) then
-    NoclipButtonPressed^ := 0;
-
-  if EnableNoclip^ = 1 then
-  begin
-    noclip.PollControls;
-    noclip.NOPFalling(True);
-  end
-  else
-  begin
-    noclip.NOPFalling(False);
-  end;
-
+  if noclip <> nil then PollNoclip();
 
 
   { ---------------------------- Debug Screen F1 --------------------------- }
   { -> Shows inforamtion                                                     }
-  { -> toggles with 'F1'                                                      }
-  EnableDebug := PByte(cave + $3E0);
-  DebugButtonPressed := PByte(cave + $3E8);
-  if (GetAsyncKeyState(VK_F1) <> 0) and (DebugButtonPressed^ = 0) and
-    (EnableDebug^ = 0) then
-  begin
-    EnableDebug^ := 1;
-    DebugButtonPressed^ := 1;
-  end;
-
-  if (GetAsyncKeyState(VK_F1) <> 0) and (DebugButtonPressed^ = 0) and
-    (EnableDebug^ = 1) then
-  begin
-    EnableDebug^ := 0;
-    DebugButtonPressed^ := 1;
-  end;
-
-  if (GetAsyncKeyState(VK_F1) = 0) then
-    DebugButtonPressed^ := 0;
-
-  if EnableDebug^ = 1 then
-  begin
-    ShowDebugMenu();
-  end;
-
+  { -> toggles with 'F1'                                                     }
+  PollDebug();
 
 
   { ----------------------------- Drawing ESP ------------------------------ }
@@ -339,15 +242,14 @@ begin
 
 
   { --------------------------- Object Destroyer --------------------------- }
-  { -> prevent leaks. doesn't work                                           }
-  { -> TO DO: FIX THIS///Done..                                              }
-  //Aimer.Destroy;                            COMMENTED FOR DEBUG
+  { -> prevent leaks.                                                        }
+  Aimer.Destroy;
   Player.Destroy;
   esp.Destroy;
-  //taty.Destroy;                 COMMENTED FOR DEBUG
+  //taty.Destroy;                             COMMENTED FOR DEBUG
   noclip.Destroy;
   Menu.Destroy;
-  //FlagStealer.Destroy;    COMMENTED FOR DEBUG
+  //FlagStealer.Destroy;                      COMMENTED FOR DEBUG
   i := 1;
   while (i <= PlayerCount) do
   begin
@@ -359,16 +261,16 @@ begin
   { ------------------------------ Debug Line ------------------------------ }
   { -> confirms hack is active                                               }
   glColor3f(0.3, 1.0, 0.3);
-  glLineWidth(5);
+  glLineWidth(2);
   glBegin(GL_LINES);
-  glVertex2f(-1, -1);
-  glVertex2f(1.0, 1.0);
+  glVertex2f(0, 0);
+  glVertex2f(20.0, 20.0);
   glEnd();
 
   glColor3f(0.0, 1.0, 0.0);
   glBegin(GL_LINES);
-      glVertex2f(-0.5, -0.5);
-      glVertex2f(0.5, 0.5);
+      glVertex2f(20, 0);
+      glVertex2f(0, 20);
   glEnd();
 
   glLeave2DDrawingMode;
@@ -384,9 +286,39 @@ begin
   PlayerCount := tmp^ - 1; //not counting local player
 end;
 
+
+procedure PollDebug();
+begin
+  EnableDebug := PByte(cave + $3E0);
+  DebugButtonPressed := PByte(cave + $3E8);
+  if (GetAsyncKeyState(VK_F1) <> 0) and (DebugButtonPressed^ = 0) and
+    (EnableDebug^ = 0) then
+  begin
+    EnableDebug^ := 1;
+    DebugButtonPressed^ := 1;
+  end;
+
+  if (GetAsyncKeyState(VK_F1) <> 0) and (DebugButtonPressed^ = 0) and
+    (EnableDebug^ = 1) then
+  begin
+    EnableDebug^ := 0;
+    DebugButtonPressed^ := 1;
+  end;
+
+  if (GetAsyncKeyState(VK_F1) = 0) then
+    DebugButtonPressed^ := 0;
+
+  if EnableDebug^ = 1 then
+  begin
+    ShowDebugMenu();
+  end;
+end;
+
+
 procedure ShowDebugMenu;
 var
   Help:array[0..11] of AnsiString;
+  Globals:array[0..9] of AnsiString;
   i:Cardinal;
   Y:Cardinal=150;
   X:Cardinal=100;
@@ -414,6 +346,134 @@ begin
 
   for i:=0 to Length(Help)-1 do begin
       glxDrawString(X, Y+75+i*15, Help[i], 2, True);
+  end;
+
+  {
+  LockAim:= PByte         (cave + $3C0);
+  ReleasedRBM:=PByte      (cave + $3C8);
+  MenuPosX:=Pointer       (cave + $500);
+  MenuPosY:=Pointer       (cave + $504);
+  EnableESP:=PByte        (cave + $600);
+  EnableAimbot:=PByte     (cave + $604);
+  EnableLockAim:=PByte    (cave + $608);
+  EnableNoclipping:=PByte (cave + $60C);
+  EnableTATY:=PByte       (cave + $610);
+  EnableFlagSteal:=PByte  (cave + $614);
+  }
+
+
+  Globals[00]:= 'LockAim: ' + IntToStr(LockAim^);
+  Globals[01]:= 'ReleasedRBM: ' + IntToStr(ReleasedRBM^);
+  Globals[02]:= 'MenuPosX: ' + IntToStr(Cardinal(MenuPosX^));
+  Globals[03]:= 'MenuPosY: ' + IntToStr(Cardinal(MenuPosY^));
+  Globals[04]:= 'EnableESP: ' + IntToStr(EnableESP^);
+  Globals[05]:= 'EnableAimbot: ' + IntToStr(EnableAimbot^);
+  Globals[06]:= 'EnableLockAim: ' + IntToStr(EnableLockAim^);
+  Globals[07]:= 'EnableNoclipping: ' + IntToStr(EnableNoclipping^);
+  Globals[08]:= 'EnableTATY: ' + IntToStr(EnableTATY^);
+  Globals[09]:= 'EnableFlagSteal: ' + IntToStr(EnableFlagSteal^);
+
+  for i:=0 to Length(Globals)-1 do begin
+      glxDrawString(X, Y+75+(Length(Help)*15)+i*15, Globals[i], 2, True);
+  end;
+
+end;
+
+
+procedure PollNoclip();
+begin
+  EnableNoclip := PByte(cave + $3D0);
+  NoclipButtonPressed := PByte(cave + $3D8);
+  if (GetAsyncKeyState(VK_V) <> 0) and (NoclipButtonPressed^ = 0) and
+    (EnableNoclip^ = 0) and (EnableNoclipping^=1) then
+  begin
+    EnableNoclip^ := 1;
+    NoclipButtonPressed^ := 1;
+  end;
+
+  if (GetAsyncKeyState(VK_V) <> 0) and (NoclipButtonPressed^ = 0) and
+    (EnableNoclip^ = 1) then
+  begin
+    EnableNoclip^ := 0;
+    NoclipButtonPressed^ := 1;
+  end;
+
+  if (GetAsyncKeyState(VK_V) = 0) then
+    NoclipButtonPressed^ := 0;
+
+  if EnableNoclip^ = 1 then
+  begin
+    noclip.PollControls;
+    noclip.NOPFalling(True);
+    noclip.ZeroVelocities();
+  end
+  else
+  begin
+    noclip.NOPFalling(False);
+  end;
+end;
+
+procedure PollAimbot();
+begin
+
+
+  if Assigned(Aimer) then begin
+    if (EnableAimbot^=1) and (EnableLockAim^=1) then begin
+      if not (GetAsyncKeyState($1) <> 0) then
+        Aimer.ShootByte^ := $0;
+      if (GetAsyncKeyState($2) <> 0) then
+      begin
+        if ReleasedRBM^ = 1 then
+        begin
+          LockAim^ := 1;
+          CurrentBestTarget := Aimer.GetBestTarget(PlayerCount);
+          ReleasedRBM^ := 0;
+        end;
+      end
+      else
+      begin
+        ReleasedRBM^ := 1;
+      end;
+
+      if (LockAim^ = 1) and (ReleasedRBM^ = 0) then
+      begin
+        if Enemy[CurrentBestTarget] <> nil then
+        begin
+          if Enemy[CurrentBestTarget].hp <= 0 then
+          begin
+            LockAim^ := 0;
+          end
+          else
+          begin
+            if GetAsyncKeyState(VK_O) <> 0 then
+            begin
+              //Debug Output. Show current targets pointer
+              // MessageBox(0, PChar('Current Target: 0x' +
+              //   IntToHex(DWORD(Enemy[CurrentBestTarget].PlayerBase), 8)), 'e', 0);
+            end;
+            Aimer.Aim(CurrentBestTarget);
+            Aimer.AutoTrigger();
+          end;
+        end
+        else
+        begin
+          LockAim^ := 0;
+        end;
+      end
+      else
+      begin
+        LockAim^ := 0;
+      end;
+    end;
+
+    if (EnableAimbot^=1) and (EnableLockAim^=0) then begin
+      if not (GetAsyncKeyState($1) <> 0) then
+        Aimer.ShootByte^ := $0;
+      if (GetAsyncKeyState($2) <> 0) then begin
+        Aimer.Aim(Aimer.GetBestTarget(PlayerCount));
+        Aimer.AutoTrigger();
+      end;
+    end;
   end;
 end;
 

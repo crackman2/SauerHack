@@ -16,7 +16,7 @@ type
   PTEnArr = ^TEnArr;
 
   TESP = class
-    constructor Create(plr: PTPlayer; enr: PTEnArr; PlrCounter: cardinal);
+    constructor Create(ply: TPlayer; en: TEnArr; PlrCounter: cardinal);
     procedure DrawLine(StartX: single; StartY: single; EndX: single;
       EndY: single; LineTickness: single); stdcall;
     procedure DrawBox(top: single; left: single; bottom: single;
@@ -29,9 +29,10 @@ type
 
 
 
+
   public
-    ply: PTPlayer;
-    en: PTEnArr;
+    ply: TPlayer;
+    en: TEnArr;
     plrcnt: cardinal;
     scrcord: RVec2;
   end;
@@ -44,10 +45,10 @@ implementation
 { -------------------- TESP Constructor -------------------- }
 { -> assings pointers to the localplayer and the enemy array }
 { -> assings playercount to internal variable                }
-constructor TESP.Create(plr: PTPlayer; enr: PTEnArr; PlrCounter: cardinal);
+constructor TESP.Create(ply: TPlayer; en: TEnArr; PlrCounter: cardinal);
 begin
-  ply := plr;
-  en := enr;
+  Self.en:=en;
+  Self.ply:=ply;
   plrcnt := PlrCounter;
 end;
 
@@ -86,56 +87,74 @@ var
   //dWidth:Single; //2d box
 begin
   i := 1;
+  //glxDrawString(40, 300, ansistring('Entering while loop of DrawESP'), 2, True);
+  //glxDrawString(40, 312, ansistring('Playercount: ') + IntToStr(plrcnt), 2, True);
+
   while i <= plrcnt do
   begin
-    if (en^[i].IsSpectating = False) and (en^[i].hp > 0) then
+    glColor3d(1,1,0.0);
+    //glxDrawString(10, 336 + i*12, ansistring('Index : ') + IntToStr(i), 2, True);
+    if Assigned(en[i]) and Assigned(ply) then
     begin
-      if (en^[i].TeamString[0] <> ply^.TeamString[0]) or (not IsTeamBased()) then
+      //glxDrawString(140, 336 + i*12, ansistring('IsSpectator'), 2, True);
+      if (en[i].IsSpectating = False) and (en[i].hp > 0) then
       begin
-        PosToCheck.x := en^[i].pos.x;
-        PosToCheck.y := en^[i].pos.y;
-        PosToCheck.z := en^[i].pos.z + 3.5;
-        if (glW2S(PosToCheck)) then
+        //glxDrawString(270, 336 + i*12, ansistring('IsTeammate'), 2, True);
+        if (en[i].TeamString[0] <> ply.TeamString[0]) or (not IsTeamBased()) then
         begin
-          pHead.x := scrcord.x;
-          pHead.y := scrcord.y;
+          PosToCheck.x := en[i].pos.x;
+          PosToCheck.y := en[i].pos.y;
+          PosToCheck.z := en[i].pos.z + 3.5;
+          glColor3f(0,1,1);
+          //glxDrawString(390,336 + i*12,AnsiString('Entity -' + IntToStr(i) + '- Pos Z: ' + IntToStr(round(PosToCheck.z))),2,True);
+          if (glW2S(PosToCheck)) then
+          begin
+            pHead.x := scrcord.x;
+            pHead.y := scrcord.y;
+
+            PosToCheck.x := en[i].pos.x;
+            PosToCheck.y := en[i].pos.y;
+            PosToCheck.z := en[i].pos.z - 15;
+            glW2S(PosToCheck);
+            pFeet.x := scrcord.x;
+            pFeet.y := scrcord.y;
+
+            dHeight := pHead.y - pFeet.y;
+            //dWidth:=dHeight/2;//2d box
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_LINE_SMOOTH);
+            glColor3f(1, 0, 0);
+            //DrawBox(pHead.y,pHead.x - (dWidth/2),pFeet.y, pHead.x + (dWidth/2)  ,abs(dHeight/80));//2d box
+            Draw3DBox(i, abs(dHeight / 80)); //3d box
+            //glColor3f(0,2,0);//2d box
 
 
-          PosToCheck.x := en^[i].pos.x;
-          PosToCheck.y := en^[i].pos.y;
-          PosToCheck.z := en^[i].pos.z - 15;
-          glW2S(PosToCheck);
-          pFeet.x := scrcord.x;
-          pFeet.y := scrcord.y;
-
-          dHeight := pHead.y - pFeet.y;
-          //dWidth:=dHeight/2;//2d box
-
-          glEnable(GL_BLEND);
-          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-          glEnable(GL_LINE_SMOOTH);
-          glColor3f(1, 0, 0);
-          //DrawBox(pHead.y,pHead.x - (dWidth/2),pFeet.y, pHead.x + (dWidth/2)  ,abs(dHeight/80));//2d box
-          Draw3DBox(i, abs(dHeight / 80)); //3d box
-          //glColor3f(0,2,0);//2d box
+            //DrawLine(pHead.x - (dWidth/2) + 4,pFeet.y, pHead.x - (dWidth/2) + 4, pHead.y - (((1.0 - (en^[i].hp / 100.0))*dheight)),abs(dHeight/80));//2d box
 
 
-          //DrawLine(pHead.x - (dWidth/2) + 4,pFeet.y, pHead.x - (dWidth/2) + 4, pHead.y - (((1.0 - (en^[i].hp / 100.0))*dheight)),abs(dHeight/80));//2d box
+            glColor3f(0.8, 0.8, 0.8);
 
-
-          glColor3f(0.8, 0.8, 0.8);
-
-          glxDrawString(pHead.x, pHead.y + (dHeight / 4), PChar(
-            en^[i].PlayerNameString), abs(dHeight / 80), False);
-          glDisable(GL_BLEND);
-          glDisable(GL_LINE_SMOOTH);
+            glxDrawString(pHead.x, pHead.y + (dHeight / 4), PChar(en[i].PlayerNameString), abs(dHeight / 80), False);
+            glDisable(GL_BLEND);
+            glDisable(GL_LINE_SMOOTH);
+          end;
         end;
+      end else begin
+        // glColor3f(1.0,0.0,0.0);
+        // glxDrawString(270, 336 + i*12, ansistring('HP: ' + IntToStr(round(en[i].hp))), 2, True);
+        // glxDrawString(350, 336 + i*12, ansistring('SPEC: ' + IntToStr(Cardinal(en[i].IsSpectating))), 2, True);
+        // glColor3f(0.0,1.0,0.0);
       end;
+    end
+    else
+    begin
+      //glColor3f(1.0,0.0,0.0);
+      //glxDrawString(400, 500 + i * 6, ansistring('Enemy is nill. Index: ' + IntToStr(i)), 1, True);
     end;
-
     Inc(i);
   end;
-
 end;
 
 
@@ -177,12 +196,12 @@ var
   bFailed: boolean = False;
 begin
 
-  Head3D := en^[Index].pos;
-  Feet3D := en^[Index].pos;
+  Head3D := en[Index].pos;
+  Feet3D := en[Index].pos;
   Feet3D.z -= 15;
   Head3D.z += 2;
   HealthBar := Head3D;
-  HealthBar.z := Head3D.z - (((1.0 - (en^[Index].hp / 100.0)) * (Head3D.z - Feet3D.z)));
+  HealthBar.z := Head3D.z - (((1.0 - (en[Index].hp / 100.0)) * (Head3D.z - Feet3D.z)));
 
   { --- Head Vertices --- }
   HNE := Head3D;
@@ -306,19 +325,50 @@ var
   viewp: array[0..3] of GLint;
   depthr: array[0..1] of GLfloat;
   i: cardinal;
+  x,y:cardinal;
   VMBase: cardinal;
   ViewMatrx: MVPmatrix;
-  //DebugOffset: Cardinal;
+  //DebugOffset: PCardinal;
 begin
 
-  VMBase := GetModuleHandle('sauerbraten.exe') + $399000;
-  //DebugOffset:= GetModuleHandle('sauerbraten.exe') + $398FC0;
-  //VMBase := VMBase + DebugOffset;
+  VMBase := GetModuleHandle('sauerbraten.exe') + $399080;
+
+  {DebugOffset := Pointer(GetModuleHandle('sauerbraten.exe') + $398FC0);
+  VMBase := VMBase + DebugOffset^;
+
+  glxDrawString(600, 40, ansistring('DebugOffset: ' + IntToStr(DebugOffset^)), 2, True);
+
+  if GetAsyncKeyState(VK_I) <> 0 then
+  begin
+    while GetAsyncKeyState(VK_I) <> 0 do
+    begin
+    end;
+    Inc(DebugOffset^);
+  end;
+
+  if GetAsyncKeyState(VK_O) <> 0 then
+  begin
+    while GetAsyncKeyState(VK_O) <> 0 do
+    begin
+    end;
+    Dec(DebugOffset^);
+  end;
+  }
 
   for i := 0 to 15 do
   begin
     ViewMatrx[i] := PSingle(VMBase + i * 4)^;
   end;
+
+  i:=0;
+  for y := 0 to 3 do begin
+    for x := 0 to 3 do begin
+      glxDrawString(200 + x * 80,600 + y * 14,AnsiString(Format('%.1f',[ViewMatrx[i]])),2,True);
+      Inc(i);
+    end;
+  end;
+
+
 
   Clip.x := plypos.x * ViewMatrx[0] + plypos.y * ViewMatrx[4] +
     plypos.z * ViewMatrx[8] + ViewMatrx[12];
@@ -384,7 +434,6 @@ begin
   end;
 
 end;
-
 
 
 end.

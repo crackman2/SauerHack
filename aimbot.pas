@@ -34,9 +34,8 @@ type
   { TAimbot }
 
   TAimbot = class
-    ply: PTPlayer;
-    en: PTEnArr;
-    constructor Create(plr: PTPlayer; ens: PTEnArr);
+
+    constructor Create(ply: TPlayer; en: TEnArr);
     function glW2S(plypos: RVec3): boolean; stdcall;
     function IsTeamBased(): boolean; stdcall;
     function GetBestTarget(plrcnt: cardinal): integer; stdcall;
@@ -47,6 +46,8 @@ type
     scrcord: RVec2;
     ShootByte: PByte;
     Fog: Pointer;
+    ply: TPlayer;
+    en: TEnArr;
   end;
 
 
@@ -60,18 +61,18 @@ implementation
 { --------------------------- Aimbot Constructor --------------------------- }
 { -> Assings pointers to the localplayer and enemy array                     }
 { -> assings pointer to a value used to automatically fire (ShootByte)       }
-constructor TAimbot.Create(plr: PTPlayer; ens: PTEnArr);
+constructor TAimbot.Create(ply: TPlayer; en: TEnArr);
 var
   ShootByteBase: Pointer;
   Sauerbase: Pointer;
 begin
   Sauerbase := Pointer(GetModuleHandle('sauerbraten.exe'));
-  ply := plr;
-  en := ens;
-  ShootByteBase := Pointer(Sauerbase + $317110);    //uptodate 2023/08/13
+  Self.ply := ply;
+  Self.en  := en;
+  ShootByteBase := Pointer(Sauerbase + $3C9ADC);    //uptodate 2023/08/13
   ShootByteBase := Pointer(cardinal(ShootByteBase^) + $1D8); //uptodate 2023/08/13
   ShootByte := PByte(ShootByteBase);
-  Fog := Pointer(Sauerbase + $297C88);
+  Fog := Pointer(Sauerbase + $398EF8);
 end;
 
 
@@ -90,7 +91,7 @@ var
   ViewMatrx: MVPmatrix;
 begin
 
-  VMBase := GetModuleHandle('sauerbraten.exe') + $399000; //uptodate 2023/08/13
+  VMBase := GetModuleHandle('sauerbraten.exe') + $399080; //uptodate 2023/08/13
   for i := 0 to 15 do
   begin
     ViewMatrx[i] := PSingle(VMBase + i * 4)^;
@@ -183,18 +184,19 @@ begin
   i := 1;
   while i <= plrcnt do
   begin
-    if (en^[i].IsSpectating = False) and (en^[i].hp > 0) then
+    if (en[i].IsSpectating = False) and (en[i].hp > 0) then
     begin
-      if (en^[i].TeamString[0] <> ply^.TeamString[0]) or (not IsTeamBased()) then
+      if (en[i].TeamString[0] <> ply.TeamString[0]) or (not IsTeamBased()) then
       begin
-        TargetPos.x := en^[i].pos.x;
-        TargetPos.y := en^[i].pos.y;
-        TargetPos.z := en^[i].pos.z;
+        TargetPos.x := en[i].pos.x;
+        TargetPos.y := en[i].pos.y;
+        TargetPos.z := en[i].pos.z;
         if glW2S(TargetPos) then
         begin
           dist := sqrt((scrcord.x - (viewp[2] / 2)) *
-            (scrcord.x - (viewp[2] / 2)) + (scrcord.y - (viewp[3] / 2)) *
-            (scrcord.y - (viewp[3] / 2)));
+                       (scrcord.x - (viewp[2] / 2)) +
+                       (scrcord.y - (viewp[3] / 2)) *
+                       (scrcord.y - (viewp[3] / 2)));
 
           if dist < distmin then
           begin
@@ -222,13 +224,13 @@ var
 begin
   if index > 0 then
   begin
-    dx := en^[index].pos.x - ply^.pos.x;
-    dy := en^[index].pos.y - ply^.pos.y;
-    dz := (en^[index].pos.z - 1.5) - ply^.pos.z;
+    dx := en[index].pos.x - ply.pos.x;
+    dy := en[index].pos.y - ply.pos.y;
+    dz := (en[index].pos.z - 1.5) - ply.pos.z;
 
     dist := sqrt((dx * dx) + (dy * dy));
 
-    ply^.SetCamera((arctan2(dy, dx) * 57.2958) - 90.0, arctan2(dz, dist) * 57.2958);
+    ply.SetCamera((arctan2(dy, dx) * 57.2958) - 90.0, arctan2(dz, dist) * 57.2958);
   end;
 end;
 
@@ -251,8 +253,8 @@ begin
   glReadPixels(round(viewp[2] / 2), round(viewp[3] / 2), 1, 1, GL_RGB,
     GL_UNSIGNED_BYTE, @pixel[0]);
 
-  PInteger(Fog)^ := 1569325055;
-  if (pixel[0] = $0) and (pixel[1] = $FF) and (pixel[2] = $02) then
+  PCardinal(Fog)^ := 1000024;
+  if (pixel[0] = $0) and (pixel[1] = $FF) and ((pixel[2] < $0A)) then
   begin
     ShootByte^ := $1;
   end;
