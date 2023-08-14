@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Windows, gl,
   { my stuff }
-  Main, cavepointer;
+  Main, globalvars;
 var
   SBuffers:DWORD;
 

@@ -1,4 +1,4 @@
-unit cmenumain;
+unit CMenuMain;
 
 {$mode objfpc}{$H+}
 
@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, gl, windows,
-  cavepointer, cmenuwindow, ccontroldrawer, CustomTypes, DrawText;
+  globalvars, cmenuwindow, ccontroldrawer, CustomTypes, DrawText;
 
 type
 
@@ -14,7 +14,7 @@ type
 
   TMenu = class
     constructor Create(PosX: single; PosY: single; DimX: single; DimY: single;
-      Title: ansistring; Scale: single; PListStart: Pointer);
+      Title: ansistring; Scale: single; const AMenuPointersA: array of Pointer);
     procedure DrawMenu;
     procedure DrawCursor;
     procedure PollControls;
@@ -32,8 +32,8 @@ type
     CheckBoxes:array [0..5] of TCheckbox;
     CheckBoxStrings:array [0..5] of String;
     CheckBoxNumber:Cardinal;
-    PointerListStart:Pointer;
     dwLibMikModBase:DWORD;
+    MenuPointersA:array of Pointer;
   end;
 
 
@@ -41,8 +41,8 @@ implementation
 
 { TMenu }
 
-constructor TMenu.Create(PosX: single; PosY: single; DimX: single;
-  DimY: single; Title: ansistring; Scale: single; PListStart: Pointer);
+constructor TMenu.Create(PosX: single; PosY: single; DimX: single; DimY: single;
+  Title: ansistring; Scale: single; const AMenuPointersA: array of Pointer);
 begin
   menupos.x := posx;
   menupos.y := posy;
@@ -51,9 +51,11 @@ begin
   menutitle := title;
   menuscale := Scale;
 
-  PointerListStart:=PListStart;
 
-  CheckBoxNumber:=Length(CheckBoxes)-1;
+  SetLength(Self.MenuPointersA,Length(AMenuPointersA));
+  //Self.MenuPointersA:=AMenuPointersA;
+  Move(AMenuPointersA[0],Self.MenuPointersA[0],Length(AMenuPointersA) * SizeOf(Pointer));
+  CheckBoxNumber:=High(CheckBoxes);
 
   { ------ View Main.pas for more info ------ }
   //dwLibMikModBase:=GetModuleHandle('libmikmod-2.dll')+$35090; //old, dont use
@@ -75,39 +77,39 @@ begin
   CheckBoxStrings[5]:='Enable autocapture flag';
 
   for i:= 0 to CheckBoxNumber do begin
-      CheckBoxes[i]:= TCheckbox.Create(@mainwin, 10, 30+((8*menuscale)*i), CheckBoxStrings[i], menuscale, True, Pointer(PointerListStart + i*$4));
+      CheckBoxes[i]:= TCheckbox.Create(@mainwin, 10, 40+((8*menuscale)*i), CheckBoxStrings[i], menuscale, True, MenuPointersA[i]);
   end;
 end;
 
 procedure TMenu.CheckDragWindow(mx: Single; my: Single);
-var
-    Dragging:Pointer=nil;
-    MouseXOri:Pointer=nil;
-    MouseYOri:Pointer=nil;
-    MReleaser:PByte=nil;
-    MenuPosX:Pointer=nil;
-    MenuPosY:Pointer=nil;
+//var
+    //Dragging:Pointer=nil;
+    //MouseXOri:Pointer=nil;
+    //MouseYOri:Pointer=nil;
+    //MReleaser:PByte=nil;
+    //MenuPosX:Pointer=nil;
+    //MenuPosY:Pointer=nil;
 begin
-    Dragging:=Pointer (cave + $508);
-    MouseXOri:=Pointer(cave + $50C);
-    MouseYOri:=Pointer(cave + $510);
-    MReleaser:=PByte  (cave + $3F0);
-    MenuPosX:=Pointer (cave + $500);
-    MenuPosY:=Pointer (cave + $504);
+    //Dragging:=Pointer (cave + $508);
+    //MouseXOri:=Pointer(cave + $50C);
+    //MouseYOri:=Pointer(cave + $510);
+    //MReleaser:=PByte  (cave + $3F0);
+    //MenuPosX:=Pointer (cave + $500);
+    //MenuPosY:=Pointer (cave + $504);
 
-  if PByte(Dragging)^=1 then begin
-    PSingle(MenuPosX)^:=mx-PSingle(MouseXOri)^;
-    PSingle(MenuPosY)^:=my-PSingle(MouseYOri)^;
+  if global_Dragging=1 then begin
+     global_MenuPosX:=mx-global_MouseXOri;
+     global_MenuPosY:=my-global_MouseYOri;
   end
   else if (mx > menupos.x) and (mx < menupos.x + menudim.x) and
           (my > menupos.y) and (my < menupos.y + mainwin.TitleBarHeight) then
   begin
-    PByte(Dragging)^:=1;
-    PSingle(MouseXOri)^:=mx-PSingle(MenuPosX)^;
-    PSingle(MouseYOri)^:=my-PSingle(MenuPosY)^;
+    global_Dragging:=1;
+    global_MouseXOri:=mx - global_MenuPosX;
+    global_MouseYOri:=my - global_MenuPosY;
   end;
 
-  if PByte(MReleaser)^=0 then PByte(Dragging)^:=0;
+  if global_MReleaser=0 then global_Dragging:=0;
 end;
 
 procedure TMenu.DrawMenu;
@@ -126,8 +128,6 @@ var
   viewp: array[0..3] of GLint;
   PMouseX: Pointer;
   PMouseY: Pointer;
-  C:PCardinal=nil;
-
   MouseVec: array [0..3] of array [0..1] of single =
     {//////////////////////}((0,  0),/////
     {//////////////////////}(17, 17),/////
@@ -137,7 +137,6 @@ var
   i:Cardinal;
   FPS:Pointer;
 begin
-  C:=PCardinal(cave + $300);
   FPS := Pointer(GetModuleHandle('sauerbraten.exe') + $39A644);      //uptodate
   glGetIntegerv(GL_VIEWPORT, viewp);
   PMouseX := Pointer(GetModuleHandle('sauerbraten.exe') + $2A6010);  //uptodate
@@ -146,8 +145,8 @@ begin
   MouseY:=PSingle(PMouseY)^*viewp[3];
 
   { --- wiggle --- }
-  MouseVec[1][0]:=18.5+sin((C^/((PInteger(FPS)^/10)+1)))*2;
-  MouseVec[3][1]:=27+sin((C^/((PInteger(FPS)^/10)+1)))*2;
+  MouseVec[1][0]:=18.5+sin((global_pCounter/((PInteger(FPS)^/10)+1)))*2;
+  MouseVec[3][1]:=27+sin((global_pCounter/((PInteger(FPS)^/10)+1)))*2;
 
   glColor3f(1,1,1);
   glBegin(GL_QUADS);
@@ -168,14 +167,14 @@ end;
 procedure TMenu.PollControls;
 var
   //MReleaser:PByte=PByte(cave + $3F0);
-  MReleaser:PByte=nil;
+  //MReleaser:PByte=nil;
   Clicked:Boolean=False;
   i:Cardinal;
   viewp: array[0..3] of GLint;
   PMouseX: Pointer;
   PMouseY: Pointer;
 begin
-  MReleaser:=PByte(cave + $3F0);
+  //MReleaser:=PByte(cave + $3F0);
   //MReleaser:PByte=PByte(cave + $3F0);
   //MReleaser:=PByte(dwLibMikModBase + $0F0);
   glGetIntegerv(GL_VIEWPORT, viewp);
@@ -184,13 +183,13 @@ begin
   MouseX:=PSingle(PMouseX)^*viewp[2];
   MouseY:=PSingle(PMouseY)^*viewp[3];
 
-  if (GetAsyncKeyState($01) <> 0) and (MReleaser^=0) then begin
+  if (GetAsyncKeyState($01) <> 0) and (global_MReleaser=0) then begin
     Clicked:=True;
-    MReleaser^:=1;
+    global_MReleaser:=1;
   end;
 
   if (not (GetAsyncKeyState($01) <> 0)) and (not Clicked) then begin
-    MReleaser^:=0;
+    global_MReleaser:=0;
   end;
 
   if Clicked then begin

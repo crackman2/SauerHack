@@ -18,6 +18,7 @@ type
     procedure ZeroVelocities(); stdcall;
     procedure MovePlayer(Direction: char); stdcall;
 
+
   public
     addposx: Pointer;
     addposy: Pointer;
@@ -54,7 +55,8 @@ begin
   { ------- Setup Pointers To Writiable Player Positon ------- }
   { -> not the same as the one in the entity list              }
   { -> has some implications for taty          ..or mabye not  }
-  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $317110); //uptodate 2023/08/12
+  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $317110);
+  //uptodate 2023/08/12
   addposx := Pointer(Original^) + $30;
   addposy := addposx + $4;
   addposz := addposx + $8;
@@ -84,7 +86,6 @@ end;
 procedure TNoclip.PollControls; stdcall;
 var
   viewp: array [0..3] of Glint;
-  ResetFallSpeed: Pointer;
 begin
   if GetAsyncKeyState(VK_LSHIFT) <> 0 then
     SpeedCurrent := SpeedFast;
@@ -206,9 +207,9 @@ end;
 
 procedure TNoclip.ZeroVelocities(); stdcall;
 begin
-  velx^:=0;
-  vely^:=0;
-  velz^:=0;
+  velx^ := 0;
+  vely^ := 0;
+  velz^ := 0;
 end;
 
 
@@ -218,9 +219,9 @@ begin
     'W':
     begin
       posx^ := posx^ + (cos((camx^ + 90) / 57.2958) * SpeedCurrent) *
-        (1.57079576 -  (abs((camy^ / 57.2958))));
+        (1.57079576 - (abs((camy^ / 57.2958))));
       posy^ := posy^ + (sin((camx^ + 90) / 57.2958) * SpeedCurrent) *
-        (1.57079576 -  (abs((camy^ / 57.2958))));
+        (1.57079576 - (abs((camy^ / 57.2958))));
       posz^ := posz^ + (sin((camy^ / 57.2958)) * SpeedCurrent);
     end;
     'A':
@@ -231,9 +232,9 @@ begin
     'S':
     begin
       posx^ := posx^ + (cos((camx^ - 90) / 57.2958) * SpeedCurrent) *
-        (1.57079576 -  (abs((camy^ / 57.2958))));
+        (1.57079576 - (abs((camy^ / 57.2958))));
       posy^ := posy^ + (sin((camx^ - 90) / 57.2958) * SpeedCurrent) *
-        (1.57079576 -  (abs((camy^ / 57.2958))));
+        (1.57079576 - (abs((camy^ / 57.2958))));
       posz^ := posz^ - (sin((camy^ / 57.2958)) * SpeedCurrent);
     end;
     'D':

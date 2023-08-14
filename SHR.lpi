@@ -14,6 +14,7 @@
       <Title Value="SHR"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
+      <Icon Value="0"/>
     </General>
     <BuildModes Count="1">
       <Item1 Name="Default" Default="True"/>
@@ -26,7 +27,7 @@
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
     </RunParams>
-    <Units Count="17">
+    <Units Count="16">
       <Unit0>
         <Filename Value="SHR.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -48,14 +49,14 @@
         <UnitName Value="CPlayer"/>
       </Unit3>
       <Unit4>
-        <Filename Value="aimbot.pas"/>
+        <Filename Value="caimbot.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="Aimbot"/>
+        <UnitName Value="CAimbot"/>
       </Unit4>
       <Unit5>
-        <Filename Value="functioncaller.pas"/>
+        <Filename Value="cfunctioncaller.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="FunctionCaller"/>
+        <UnitName Value="CFunctionCaller"/>
       </Unit5>
       <Unit6>
         <Filename Value="cesp.pas"/>
@@ -68,7 +69,7 @@
         <UnitName Value="DrawText"/>
       </Unit7>
       <Unit8>
-        <Filename Value="teleportallenemiestoyou.pas"/>
+        <Filename Value="cteleportallenemiestoyou.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CTeleportAllEnemiesToYou"/>
       </Unit8>
@@ -83,8 +84,9 @@
         <UnitName Value="CustomTypes"/>
       </Unit10>
       <Unit11>
-        <Filename Value="menu\menumain.pas"/>
+        <Filename Value="menu\cmenumain.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="CMenuMain"/>
       </Unit11>
       <Unit12>
         <Filename Value="menu\controldrawer.pas"/>
@@ -93,6 +95,7 @@
       <Unit13>
         <Filename Value="menu\cmenuwindow.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="CMenuWindow"/>
       </Unit13>
       <Unit14>
         <Filename Value="cflagstealer.pas"/>
@@ -100,13 +103,9 @@
         <UnitName Value="CFlagStealer"/>
       </Unit14>
       <Unit15>
-        <Filename Value="cmemoryallocator.pas"/>
+        <Filename Value="globalvars.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit15>
-      <Unit16>
-        <Filename Value="cavepointer.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit16>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -127,11 +126,17 @@
       <SmartLinkUnit Value="True"/>
       <RelocatableUnit Value="True"/>
       <TargetOS Value="win32"/>
+      <Optimizations>
+        <OptimizationLevel Value="3"/>
+      </Optimizations>
     </CodeGeneration>
     <Linking>
       <Debugging>
+        <GenerateDebugInfo Value="False"/>
         <UseValgrind Value="True"/>
+        <StripSymbols Value="True"/>
       </Debugging>
+      <LinkSmart Value="True"/>
       <Options>
         <ExecutableType Value="Library"/>
       </Options>

@@ -8,28 +8,27 @@ uses
   Classes, SysUtils, Windows, gl,
   { my stuff }
   Main, cavepointer;
-
 var
-  SBuffers: DWORD;
+  SBuffers:DWORD;
 
 type
   ARRByte = array[0..3] of byte;
 
-procedure HookSwapBuffers(); stdcall;
+procedure HookSwapBuffers();stdcall;
 procedure WriteJump(J_FROM: DWORD; J_TO: DWORD; J0C1: boolean); stdcall;
 procedure CreateRenderingContext(); stdcall;
 procedure CodeCaveCodeASM(); stdcall;
 
 implementation
 
-procedure HookSwapBuffers(); stdcall;
+procedure HookSwapBuffers();stdcall;
 var
-  CodeCave: Pointer;
-  SBuffers: DWORD;
-  Garbage: DWORD;
-  ErrorMsg: string;
+  CodeCave:Pointer;
+  SBuffers:DWORD;
+  Garbage :DWORD;
+  ErrorMsg:string;
 
-  OriginalCode: array[0..4] of byte = ($8B, $FF, $55, $8B, $EC);
+  OriginalCode: array[0..4] of byte = ($8B,$FF,$55,$8B,$EC);
   i: cardinal;
 
 begin
@@ -42,38 +41,35 @@ begin
   {    some room to work with                                                }
   { -> originally it used to be an actual code cave I found in opengl32.dll  }
   {    but now I just allocate some memory                                   }
-  CodeCave := AllocMem(8192);
-  SBuffers := DWORD(GetProcAddress(GetModuleHandle('opengl32.dll'), 'wglSwapBuffers'));
+  CodeCave:=AllocMem(8192);
+  SBuffers:=DWORD(GetProcAddress(GetModuleHandle('opengl32.dll'),'wglSwapBuffers'));
 
-  if (VirtualProtect(CodeCave, 8192, PAGE_EXECUTE_READWRITE, @Garbage)) then
-  begin
-    VirtualProtect(Pointer(SBuffers), 5, PAGE_EXECUTE_READWRITE, @Garbage);
-    cave := Pointer(DWORD(CodeCave) + 32); { setup cave pointer     }
-    caveHDC := 0;                          { setup device context   }
-    caveNewRC := 0;                        { setup rendering context}
+  if (VirtualProtect(CodeCave,8192,PAGE_EXECUTE_READWRITE,@Garbage)) then begin
+      VirtualProtect(Pointer(SBuffers),5,PAGE_EXECUTE_READWRITE,@Garbage);
+      cave:=Pointer(DWORD(CodeCave) + 32); { setup cave pointer     }
+      caveHDC:=0;                          { setup device context   }
+      caveNewRC:=0;                        { setup rendering context}
 
 
-    WriteJump(SBuffers, DWORD(CodeCave), False);
-    PBYTE(CodeCave + 00)^ := $60; //pushad
-    PBYTE(CodeCave + 01)^ := $9C; //pushfd
-    WriteJump(DWORD(CodeCave + 02), DWORD(@CodeCaveCodeASM), True);   // + 5 bytes
-    PBYTE(CodeCave + 07)^ := $9D; //popfd
-    PBYTE(CodeCave + 08)^ := $61; //popad
+      WriteJump(SBuffers,DWORD(CodeCave), False);
+      PBYTE(CodeCave + 00)^:=$60; //pushad
+      PBYTE(CodeCave + 01)^:=$9C; //pushfd
+      WriteJump(DWORD(CodeCave + 02),DWORD(@CodeCaveCodeASM),True);   // + 5 bytes
+      PBYTE(CodeCave + 07)^:=$9D; //popfd
+      PBYTE(CodeCave + 08)^:=$61; //popad
 
-    for i := 0 to 4 do  //write original code
-    begin
-      PBYTE(CodeCave + 09 + i)^ := OriginalCode[i];
-    end;
+      for i := 0 to 4 do  //write original code
+      begin
+        PBYTE(CodeCave + 09 + i)^ := OriginalCode[i];
+      end;
 
-    WriteJump(DWORD(CodeCave) + 14, SBuffers + 5, False);
+      WriteJump(DWORD(CodeCave)+14,SBuffers+5,False);
 
   end
-  else
-  begin
-    ErrorMsg := SysErrorMessage(GetLastError);
-    MessageBox(0, PChar('ERROR All is lost. Cave at: ' +
-      IntToHex(DWORD(CodeCave), 8)), PChar('oh no'), 0);
-    MessageBox(0, PChar('ErrorMsg:' + ErrorMsg), 'e', 0);
+  else begin
+      ErrorMsg := SysErrorMessage(GetLastError);
+      MessageBox(0,PChar('ERROR All is lost. Cave at: ' + IntToHex(DWORD(CodeCave),8)),PChar('oh no'),0);
+      MessageBox(0,PChar('ErrorMsg:' + ErrorMsg),'e',0);
   end;
 
 end;
@@ -116,22 +112,20 @@ end;
 { -> this can then be switched to before drawing calls in MainFunc           }
 procedure CreateRenderingContext(); stdcall;
 begin
-  if caveHDC <> 0 then
-  begin
-    if caveNewRC = 0 then
+    if caveHDC <> 0  then
     begin
-      caveNewRC := wglCreateContext(HDC(caveHDC));
-      if caveNewRC = 0 then
-      begin
-        MessageBox(0, 'wglCreateContext did not work', 'Error', 0);
-      end;
+      if caveNewRC = 0 then begin
+          caveNewRC:= wglCreateContext(HDC(caveHDC));
+          if caveNewRC = 0 then
+          begin
+              MessageBox(0,'wglCreateContext did not work','Error',0);
+          end;
+        end;
+    end
+    else
+    begin
+      MessageBox(0,'DC (found on the stack) is 0 for some reason','Error while creating context',0);
     end;
-  end
-  else
-  begin
-    MessageBox(0, 'DC (found on the stack) is 0 for some reason',
-      'Error while creating context', 0);
-  end;
 end;
 
 { ----------------------------- CodeCaveCodeASM ---------------------------- }
@@ -143,11 +137,12 @@ procedure CodeCaveCodeASM(); stdcall;
 begin
   {$ASMMODE intel}
   asm
-           MOV     EAX, [ESP + $30] //grabs HDC from Stack
-           MOV     caveHDC, EAX     //and stores it
+     mov eax, [esp + $30] //grabs HDC from Stack
+     mov caveHDC, eax     //and stores it
   end;
-  CreateRenderingContext();
-  MainFunc();
+     CreateRenderingContext();
+     MainFunc();
 end;
 
 end.
+

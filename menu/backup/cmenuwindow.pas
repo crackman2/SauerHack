@@ -1,4 +1,4 @@
-unit cmenuwindow;
+unit CMenuWindow;
 
 {$mode objfpc}{$H+}
 
@@ -16,12 +16,11 @@ type
     constructor Create(Position: RVec2; Dimensions: RVec2; WindowTitle: ansistring);
     procedure DrawWindow;
 
-
   public
     pos: RVec2;
     dim: RVec2;
     title: ansistring;
-    TitleBarHeight: single;
+      TitleBarHeight: single;
   end;
 
   PTWindow = ^TWindow;
@@ -35,7 +34,7 @@ begin
   pos := Position;
   dim := Dimensions;
   title := WindowTitle;
-  TitleBarHeight := 20;
+  TitleBarHeight:=35;
 end;
 
 procedure TWindow.DrawWindow;
@@ -59,9 +58,8 @@ begin
   glEnd();
 
   { ----------------------------- Titlebar Text ---------------------------- }
-  glColor3f(0.8, 0.8, 0.8);
-  glxDrawString(pos.x + TitleBarHeight / 2, pos.y + TitleBarHeight / 4, title,
-    TitleBarHeight / 10, True);
+  glColor3f(0.8,0.8,0.8);
+  glxDrawString(pos.x+TitleBarHeight/2,pos.y+TitleBarHeight/4,title,TitleBarHeight/10,true);
 end;
 
 end.

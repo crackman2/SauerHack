@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Windows, gl,
-  CPlayer, Aimbot, DrawText;
+  CPlayer, CAimbot, DrawText;
 
 type
   TEnArr = array[1..32] of TPlayer;

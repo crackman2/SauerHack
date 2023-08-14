@@ -1,4 +1,4 @@
-unit ccontroldrawer;
+unit CControlDrawer;
 
 {$mode objfpc}{$H+}
 

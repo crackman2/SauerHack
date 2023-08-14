@@ -253,7 +253,7 @@ begin
   glReadPixels(round(viewp[2] / 2), round(viewp[3] / 2), 1, 1, GL_RGB,
     GL_UNSIGNED_BYTE, @pixel[0]);
 
-  PInteger(Fog)^ := 1000024;
+  PCardinal(Fog)^ := 1000024;
   if (pixel[0] = $0) and (pixel[1] = $FF) and ((pixel[2] < $0A)) then
   begin
     ShootByte^ := $1;

@@ -1,4 +1,4 @@
-unit cmenuwindow;
+unit CMenuWindow;
 
 {$mode objfpc}{$H+}
 
@@ -34,7 +34,7 @@ begin
   pos := Position;
   dim := Dimensions;
   title := WindowTitle;
-  TitleBarHeight:=20;
+  TitleBarHeight:=30;
 end;
 
 procedure TWindow.DrawWindow;

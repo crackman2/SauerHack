@@ -4,13 +4,13 @@
     <PathDelim Value="\"/>
     <Version Value="11"/>
     <BuildModes Active="Default"/>
-    <Units Count="20">
+    <Units Count="19">
       <Unit0>
         <Filename Value="SHR.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="SHReloaded"/>
         <EditorIndex Value="3"/>
-        <CursorPos Y="18"/>
+        <CursorPos X="38" Y="21"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
       </Unit0>
@@ -18,9 +18,9 @@
         <Filename Value="swapbuffershook.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="Swapbuffershook"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="82"/>
-        <CursorPos X="24" Y="130"/>
+        <EditorIndex Value="11"/>
+        <TopLine Value="114"/>
+        <CursorPos X="93" Y="5"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
       </Unit1>
@@ -28,8 +28,9 @@
         <Filename Value="main.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="Main"/>
-        <TopLine Value="432"/>
-        <CursorPos X="45" Y="461"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="497"/>
+        <CursorPos X="15" Y="517"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
       </Unit2>
@@ -37,29 +38,28 @@
         <Filename Value="cplayer.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CPlayer"/>
-        <EditorIndex Value="13"/>
+        <EditorIndex Value="6"/>
         <TopLine Value="151"/>
         <CursorPos X="49" Y="173"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
       </Unit3>
       <Unit4>
-        <Filename Value="aimbot.pas"/>
+        <Filename Value="caimbot.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="Aimbot"/>
-        <EditorIndex Value="10"/>
-        <TopLine Value="226"/>
-        <CursorPos X="12" Y="256"/>
+        <UnitName Value="CAimbot"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="73"/>
+        <CursorPos X="26" Y="126"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
       </Unit4>
       <Unit5>
-        <Filename Value="functioncaller.pas"/>
+        <Filename Value="cfunctioncaller.pas"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="FunctionCaller"/>
-        <EditorIndex Value="8"/>
-        <TopLine Value="4"/>
-        <CursorPos X="69" Y="17"/>
+        <UnitName Value="CFunctionCaller"/>
+        <EditorIndex Value="14"/>
+        <CursorPos X="16"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
       </Unit5>
@@ -67,10 +67,9 @@
         <Filename Value="cesp.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CESP"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="9"/>
-        <TopLine Value="346"/>
-        <CursorPos X="4" Y="371"/>
+        <EditorIndex Value="10"/>
+        <TopLine Value="357"/>
+        <CursorPos X="65" Y="216"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
       </Unit6>
@@ -78,27 +77,27 @@
         <Filename Value="drawtext.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="DrawText"/>
-        <EditorIndex Value="4"/>
-        <TopLine Value="318"/>
-        <CursorPos X="9" Y="451"/>
+        <EditorIndex Value="8"/>
+        <CursorPos X="21" Y="5"/>
         <UsageCount Value="206"/>
         <Loaded Value="True"/>
       </Unit7>
       <Unit8>
-        <Filename Value="teleportallenemiestoyou.pas"/>
+        <Filename Value="cteleportallenemiestoyou.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CTeleportAllEnemiesToYou"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="7"/>
-        <UsageCount Value="201"/>
+        <EditorIndex Value="12"/>
+        <CursorPos X="13" Y="9"/>
+        <UsageCount Value="87"/>
+        <Loaded Value="True"/>
       </Unit8>
       <Unit9>
         <Filename Value="cnoclip.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CNoclip"/>
-        <EditorIndex Value="12"/>
-        <TopLine Value="64"/>
-        <CursorPos X="32" Y="86"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="77"/>
+        <CursorPos X="54" Y="114"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
       </Unit9>
@@ -106,17 +105,20 @@
         <Filename Value="customtypes.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CustomTypes"/>
-        <EditorIndex Value="15"/>
-        <TopLine Value="14"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="7"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit10>
       <Unit11>
-        <Filename Value="menu\menumain.pas"/>
+        <Filename Value="menu\cmenumain.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="14" Y="8"/>
-        <UsageCount Value="200"/>
+        <UnitName Value="CMenuMain"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="97"/>
+        <CursorPos X="12" Y="107"/>
+        <UsageCount Value="102"/>
+        <Loaded Value="True"/>
       </Unit11>
       <Unit12>
         <Filename Value="menu\controldrawer.pas"/>
@@ -128,9 +130,10 @@
       <Unit13>
         <Filename Value="menu\cmenuwindow.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="6"/>
+        <UnitName Value="CMenuWindow"/>
+        <EditorIndex Value="4"/>
         <TopLine Value="31"/>
-        <CursorPos X="67" Y="42"/>
+        <CursorPos X="21" Y="37"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit13>
@@ -138,171 +141,161 @@
         <Filename Value="cflagstealer.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CFlagStealer"/>
-        <EditorIndex Value="11"/>
-        <CursorPos X="61" Y="50"/>
-        <UsageCount Value="128"/>
+        <EditorIndex Value="13"/>
+        <CursorPos X="31" Y="49"/>
+        <UsageCount Value="137"/>
         <Loaded Value="True"/>
       </Unit14>
       <Unit15>
-        <Filename Value="cmemoryallocator.pas"/>
-        <IsPartOfProject Value="True"/>
-        <EditorIndex Value="-1"/>
-        <CursorPos X="77" Y="6"/>
-        <UsageCount Value="82"/>
-      </Unit15>
-      <Unit16>
-        <Filename Value="cavepointer.pas"/>
+        <Filename Value="globalvars.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="1"/>
-        <CursorPos X="79" Y="13"/>
-        <UsageCount Value="80"/>
+        <TopLine Value="19"/>
+        <CursorPos X="10" Y="47"/>
+        <UsageCount Value="89"/>
         <Loaded Value="True"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="cmemoryallocator.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="77" Y="6"/>
+        <UsageCount Value="85"/>
       </Unit16>
       <Unit17>
-        <Filename Value="cteleportallenemiestoyou.pas"/>
-        <UnitName Value="CTeleportAllEnemiesToYou"/>
-        <EditorIndex Value="14"/>
-        <CursorPos X="101" Y="76"/>
-        <UsageCount Value="83"/>
-        <Loaded Value="True"/>
+        <Filename Value="menu\ccontroldrawer.pas"/>
+        <UnitName Value="CControlDrawer"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="56" Y="2"/>
+        <UsageCount Value="80"/>
       </Unit17>
       <Unit18>
-        <Filename Value="menu\cmenumain.pas"/>
-        <EditorIndex Value="5"/>
-        <TopLine Value="60"/>
-        <CursorPos Y="70"/>
-        <UsageCount Value="98"/>
-        <Loaded Value="True"/>
+        <Filename Value="shrinjector.pas"/>
+        <UnitName Value="SHRInjector"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="21" Y="14"/>
+        <UsageCount Value="21"/>
       </Unit18>
-      <Unit19>
-        <Filename Value="menu\ccontroldrawer.pas"/>
-        <EditorIndex Value="7"/>
-        <TopLine Value="9"/>
-        <CursorPos Y="121"/>
-        <UsageCount Value="79"/>
-        <Loaded Value="True"/>
-      </Unit19>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="96" Column="43" TopLine="83"/>
+        <Filename Value="cteleportallenemiestoyou.pas"/>
+        <Caret Line="9" Column="13"/>
       </Position1>
       <Position2>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="105" Column="35" TopLine="76"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="9" Column="13"/>
       </Position2>
       <Position3>
         <Filename Value="main.pas"/>
-        <Caret Line="168" Column="26" TopLine="149"/>
+        <Caret Line="158" Column="82" TopLine="142"/>
       </Position3>
       <Position4>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="101" Column="20" TopLine="387"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="350" Column="48" TopLine="333"/>
       </Position4>
       <Position5>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="48" Column="18" TopLine="31"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="351" Column="55" TopLine="334"/>
       </Position5>
       <Position6>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="97" Column="22" TopLine="80"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="352" Column="51" TopLine="335"/>
       </Position6>
       <Position7>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="19" Column="17" TopLine="2"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="218" Column="17" TopLine="114"/>
       </Position7>
       <Position8>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="140" Column="12" TopLine="309"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="158" Column="21" TopLine="141"/>
       </Position8>
       <Position9>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="108" Column="111" TopLine="91"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="78" Column="126" TopLine="58"/>
       </Position9>
       <Position10>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="109" Column="28" TopLine="82"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="147" Column="29" TopLine="125"/>
       </Position10>
       <Position11>
-        <Filename Value="cplayer.pas"/>
-        <Caret Line="158" Column="33" TopLine="86"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="36" Column="20" TopLine="23"/>
       </Position11>
       <Position12>
-        <Filename Value="cplayer.pas"/>
-        <Caret Line="224" Column="16" TopLine="195"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="55" Column="55" TopLine="37"/>
       </Position12>
       <Position13>
-        <Filename Value="cplayer.pas"/>
-        <Caret Line="78" Column="20" TopLine="66"/>
+        <Filename Value="cesp.pas"/>
+        <Caret Line="303" Column="22" TopLine="286"/>
       </Position13>
       <Position14>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="147" Column="100" TopLine="130"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="56" Column="23" TopLine="40"/>
       </Position14>
       <Position15>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="366" Column="97" TopLine="338"/>
+        <Filename Value="caimbot.pas"/>
+        <Caret Line="126" Column="26" TopLine="73"/>
       </Position15>
       <Position16>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="365" Column="12" TopLine="348"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="36" Column="5" TopLine="19"/>
       </Position16>
       <Position17>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="354" Column="21" TopLine="324"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="56" Column="24" TopLine="36"/>
       </Position17>
       <Position18>
-        <Filename Value="cesp.pas"/>
-        <Caret Line="90" Column="5" TopLine="89"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="55" Column="53" TopLine="39"/>
       </Position18>
       <Position19>
-        <Filename Value="main.pas"/>
-        <Caret Line="291" Column="3" TopLine="275"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="58" Column="35" TopLine="52"/>
       </Position19>
       <Position20>
-        <Filename Value="aimbot.pas"/>
-        <Caret Line="38" Column="9" TopLine="22"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="397" Column="60" TopLine="390"/>
       </Position20>
       <Position21>
-        <Filename Value="aimbot.pas"/>
-        <Caret Line="228" Column="40" TopLine="162"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="153" Column="35" TopLine="140"/>
       </Position21>
       <Position22>
-        <Filename Value="aimbot.pas"/>
-        <Caret Line="64" Column="46" TopLine="41"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="109" Column="19" TopLine="92"/>
       </Position22>
       <Position23>
-        <Filename Value="aimbot.pas"/>
-        <Caret Line="71" Column="12" TopLine="62"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="514" Column="22" TopLine="487"/>
       </Position23>
       <Position24>
-        <Filename Value="aimbot.pas"/>
-        <Caret Line="41" Column="14" TopLine="24"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="525" Column="20" TopLine="499"/>
       </Position24>
       <Position25>
-        <Filename Value="aimbot.pas"/>
-        <Caret Line="75" Column="5" TopLine="39"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="517" Column="33" TopLine="497"/>
       </Position25>
       <Position26>
-        <Filename Value="aimbot.pas"/>
-        <Caret Line="48" Column="8" TopLine="40"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="192" Column="12" TopLine="171"/>
       </Position26>
       <Position27>
-        <Filename Value="main.pas"/>
-        <Caret Line="192" Column="13" TopLine="185"/>
+        <Filename Value="menu\cmenumain.pas"/>
+        <Caret Line="107" Column="12" TopLine="97"/>
       </Position27>
       <Position28>
-        <Filename Value="aimbot.pas"/>
-        <Caret Line="253" Column="15" TopLine="16"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="384" Column="13" TopLine="497"/>
       </Position28>
       <Position29>
-        <Filename Value="aimbot.pas"/>
-        <Caret Line="233" Column="11" TopLine="207"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="143" Column="5" TopLine="133"/>
       </Position29>
       <Position30>
-        <Filename Value="cplayer.pas"/>
-        <Caret Line="19" Column="15"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="517" Column="15" TopLine="497"/>
       </Position30>
     </JumpHistory>
     <RunParams>
@@ -310,4 +303,15 @@
       <Modes Count="0" ActiveMode=""/>
     </RunParams>
   </ProjectSession>
+  <Debugging>
+    <BreakPoints Count="1">
+      <Item1>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="shrinjector.pas"/>
+        <Line Value="11"/>
+      </Item1>
+    </BreakPoints>
+  </Debugging>
 </CONFIG>

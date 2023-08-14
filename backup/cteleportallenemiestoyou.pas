@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Windows, gl,
-  CPlayer, Aimbot, DrawText;
+  CPlayer, CAimbot, DrawText;
 
 type
   TEnArr = array[1..32] of TPlayer;
@@ -23,7 +23,6 @@ type
     constructor Create(plr: PTPlayer; enr: PTEnArr; PlayerCount: cardinal);
     procedure TeleportAllEnemiesInfrontOfYou(); stdcall;
     function IsTeamBased(): boolean; stdcall;
-
 
   public
     ply: PTPlayer;
@@ -74,8 +73,7 @@ function TTeleAETY.IsTeamBased(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^;
-  //uptodate 2023/08/13
+  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^; //uptodate 2023/08/13
   case (TeamValue) of
     0: Result := False;
     1: Result := False;
@@ -108,3 +106,4 @@ end;
 
 
 end.
+
