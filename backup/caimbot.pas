@@ -255,7 +255,7 @@ end;
 procedure TAimbot.AutoTrigger(); stdcall;
 var
   pixel: array[0..3] of byte;
-  viewp: array[0..3] of GLint = (0,0,0,0);
+  viewp: array[0..3] of GLint;
 begin
   glGetIntegerv(GL_VIEWPORT, viewp);
   glReadPixels(round(viewp[2] / 2), round(viewp[3] / 2), 1, 1, GL_RGB,

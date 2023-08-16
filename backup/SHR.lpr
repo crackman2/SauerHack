@@ -5,8 +5,7 @@ library SHReloaded;
 uses
   Classes, Swapbuffershook, Main, CPlayer, CAimbot, cfunctioncaller, CESP,
   DrawText, CNoclip, CustomTypes, cmenumain, ccontroldrawer, cmenuwindow,
-  CFlagStealer, globalvars, SHRInjector
-  { you can add units after this };
+  CFlagStealer, GlobalVars, GlobalObjects, unit2;
 
 { --------------------------- SauerHack Reloaded  -------------------------- }
 { -> Aims to be more tidy and more better in general and with waaay more     }

@@ -20,13 +20,15 @@ type
   {    sent to the server                                          }
 
   TTeleAETY = class
-    constructor Create(plr: PTPlayer; enr: PTEnArr; PlayerCount: cardinal);
+    constructor Create(ply: TPlayer);
+    procedure SetEnemyArray(en: TEnArr);
+    procedure SetPlayerCount(plrcnt: Cardinal);
     procedure TeleportAllEnemiesInfrontOfYou(); stdcall;
     function IsTeamBased(): boolean; stdcall;
 
   public
-    ply: PTPlayer;
-    en: PTEnArr;
+    ply: TPlayer;
+    en: TEnArr;
     plrcnt: cardinal;
   end;
 
@@ -34,11 +36,25 @@ implementation
 
 { TTeleAETY }
 
-constructor TTeleAETY.Create(plr: PTPlayer; enr: PTEnArr; PlayerCount: cardinal);
+constructor TTeleAETY.Create(ply: TPlayer);
 begin
-  ply := plr;
-  en := enr;
-  plrcnt := PlayerCount;
+  Self.ply := ply;
+end;
+
+{ ------------------------------ SetEnemyArray ----------------------------- }
+{ -> en must be set before anything can be done, really                      }
+{ -> the enemy array is created in MainFunc                                  }
+procedure TTeleAETY.SetEnemyArray(en: TEnArr);
+begin
+  Self.en  := en;
+end;
+
+{ ------------------------------ SetPlayerCount ----------------------------- }
+{ -> plrcnt must be set before anything can be done, really                   }
+{ -> the playercount is found during the main loop                            }
+procedure TTeleAETY.SetPlayerCount(plrcnt: Cardinal);
+begin
+  Self.plrcnt:=plrcnt;
 end;
 
 
@@ -48,17 +64,17 @@ end;
 procedure TTeleAETY.TeleportAllEnemiesInfrontOfYou(); stdcall;
 var
   i: cardinal;
-  viewp: array[0..3] of GLint;
+  viewp: array[0..3] of GLint = (0,0,0,0);
 begin
   i := 1;
   while i <= plrcnt do
   begin
-    if (en^[i].IsSpectating = False) and (en^[i].hp > 0) then
+    if (en[i].IsSpectating = False) and (en[i].hp > 0) then
     begin
-      if (en^[i].TeamString[0] <> ply^.TeamString[0]) or (not IsTeamBased()) then
+      if (en[i].TeamString[0] <> ply.TeamString[0]) or (not IsTeamBased()) then
       begin
-        en^[i].SetPos(ply^.pos.x, ply^.pos.y, ply^.pos.z);
-        en^[i].SetPosAlt(ply^.pos.x, ply^.pos.y, ply^.pos.z);
+        en[i].SetPos(ply.pos.x, ply.pos.y, ply.pos.z);
+        en[i].SetPosAlt(ply.pos.x, ply.pos.y, ply.pos.z);
       end;
     end;
     Inc(i);

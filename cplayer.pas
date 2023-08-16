@@ -14,18 +14,18 @@ type
   { This class is for both enemies and the localplayer }
 
   TPlayer = class
+    constructor Create(TheIndex: cardinal);
     procedure FindPlayerPointer; stdcall;
     procedure GetPlayerData; stdcall;
     procedure SetCamera(camH: single; camV: single); stdcall;
     procedure SetPos(x: single; y: single; z: single);
     procedure SetPosAlt(x: single; y: single; z: single);
     procedure CalibrateMouse; stdcall;
-    constructor Create(TheIndex: cardinal);
-
 
 
   public
-    pos: RVec3;                        //World Position
+    pos: RVec3;//World Position
+    cam: RVec2; //camera horizontal
     TeamString: array[0..99] of char;  //Team name
     TeamStringLength: integer;
     PlayerNameString: array[0..99] of char;
@@ -52,6 +52,16 @@ type
 implementation
 
 { TPlayer }
+
+constructor TPlayer.Create(TheIndex: cardinal);
+begin
+  { ------------------------ Set Index In EntityList ----------------------- }
+  { -> 0 is localplayer                                                      }
+  Index := TheIndex;
+
+  { ----------------------------- Init Variables --------------------------- }
+  IsSpectating := False;
+end;
 
 procedure TPlayer.FindPlayerPointer; stdcall;
 var
@@ -94,8 +104,8 @@ begin
     pos.y := PSingle(PlayerBase + $4)^;
     pos.z := PSingle(PlayerBase + $8)^;
 
-
-
+    cam.x  := PSingle(PlayerBase + $3C)^;
+    cam.y  := PSingle(PlayerBase + $40)^;
 
     { ----------------------------- Team String ---------------------------- }
     { -> reading the Team name to differentiate between enemies and friends  }
@@ -211,17 +221,6 @@ begin
   GetCursorPos(CurPos);
   CursorPosition.x := CurPos.x;
   CursorPosition.y := CurPos.y;
-end;
-
-constructor TPlayer.Create(TheIndex: cardinal);
-begin
-  { ------------------------ Set Index In EntityList ----------------------- }
-  { -> 0 is localplayer                                                      }
-  Index := TheIndex;
-
-  { ----------------------------- Init Variables --------------------------- }
-  IsSpectating := False;
-  GetPlayerData();
 end;
 
 end.

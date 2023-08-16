@@ -1,4 +1,4 @@
-unit globalvars;
+unit GlobalVars;
 
 {$mode objfpc}{$H+}
 
@@ -7,49 +7,66 @@ interface
 uses
   Classes, SysUtils, gl, glu, windows;
 var
-  { ----------------------------- cave pointer  ---------------------------- }
-  { -> main code cave pointer                                                }
-  { -> value set during hook setup                                           }
-  { -> cave starts right after the jump back to wglSwapbuffers               }
-  cave:Pointer;
-  caveHDC:HDC;
-  caveNewRC:HGLRC;
-
-  global_LockAim:Byte;
-  global_ReleasedRBM:Byte;
-  global_EnableNoclip:Byte;
-  global_NoclipButtonPressed:Byte;
-  global_MReleaser:Byte;
-  global_MenuPosX:Single;
-  global_MenuPosY:Single;
-  global_Dragging:Byte;
-  global_MouseXOri:Single;
-  global_MouseYOri:Single;
-
-  global_MenuInitialSetup:Byte=0;
-
-
-  { --- Checkboxes for Menu --- }
-  global_EnableESP:Byte;          //0
-  global_EnableAimbot:Byte;       //1
-  global_EnableLockAim:Byte;      //2
-  global_EnableNoclipping:Byte;   //3
-  global_EnableTATY:Byte;         //4
-  global_EnableFlagSteal:Byte;    //5
-
-  global_MenuPointers:array of Pointer;
-
-  global_pCounter:Cardinal=0;
+  { ------------------------------ Hook Setup ------------------------------ }
+  { -> g_cave is a pointer to the newly allocated memory where the detour to }
+  {    call MainFunc() lives. Previously used for storage, now it's a waste- }
+  {    land of unused space                                                  }
+  { -> g_HDC  is where the handle to the device context is saved. we grab it }
+  {    from the stack when wglSwapBuffers is hooked. used to create our own  }
+  {    rendering context                                                     }
+  { -> g_NewRC is our new rendering context where all the drawing happens.   }
+  {    it is created only once. afterwards we switch to it when we want to   }
+  {    draw and then return to the old context when we are done. also        }
+  {    created when hooking wglSwapBuffers                                   }
+  g_cave:Pointer;
+  g_HDC:HDC;
+  g_NewRC:HGLRC;
 
 
 
-  global_EnableDebug:Byte;
-  global_DebugButtonPressed:Byte;
+  { --------------------------- General Settings --------------------------- }
+  { -> these variables are used to store the active configuration            }
+  { -> the frist sentence was a lie. there are also odd things like button   }
+  {    checks                                                                }
+  { -> these were originally pointers to memory in a codecave, because i had }
+  {    didn't know how to store values between frames                        }
+  { -> THE BEST WAY TO SOLVE THIS MESS IS TO INITIALIZE THE OBJECTS WHEN THE }
+  {    HOOK IS CREATED in contrast to creating and destroying everything     }
+  {    every frame. but i have yet to implement this... :(                   }
+  g_LockAim:Byte;
+  g_ReleasedRBM:Byte;
+  g_EnableNoclip:Byte;
+  g_NoclipButtonPressed:Byte;
+  g_MReleaser:Byte;
+  g_MenuPosX:Single;
+  g_MenuPosY:Single;
+  g_Dragging:Byte;
+  g_MouseXOri:Single;
+  g_MouseYOri:Single;
+  g_EnableDebug:Byte;
+  g_DebugButtonPressed:Byte;
 
 
+  { -------------------------- Checkboxes for Menu ------------------------- }
+  { -> The numbered entires correspond to the ingame menu that is drawn      }
+  { -> There is probably a much smarter way to do this rather than definign  }
+  {    global variables                                                      }
+  g_EnableESP:Byte;          //0
+  g_EnableAimbot:Byte;       //1
+  g_EnableLockAim:Byte;      //2
+  g_EnableNoclipping:Byte;   //3
+  g_EnableTATY:Byte;         //4
+  g_EnableFlagSteal:Byte;    //5
+  g_EnableTriggerbot:Byte;   //6
+
+  g_MenuInitialSetup:Byte=0; //used to initilize the variables above once... the dumb way
+  g_MenuPointers:array of Pointer; //used to store pointers for the vars above
 
 
-  {
+  g_pCounter:Cardinal;
+
+
+  { // historical values when i was even dumber than i am now
   LockAim:= PByte         (cave + $3C0);
   ReleasedRBM:=PByte      (cave + $3C8);
   EnableNoclip := PByte   (cave + $3D0);

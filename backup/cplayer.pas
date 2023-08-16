@@ -14,18 +14,18 @@ type
   { This class is for both enemies and the localplayer }
 
   TPlayer = class
+    constructor Create(TheIndex: cardinal);
     procedure FindPlayerPointer; stdcall;
     procedure GetPlayerData; stdcall;
     procedure SetCamera(camH: single; camV: single); stdcall;
     procedure SetPos(x: single; y: single; z: single);
     procedure SetPosAlt(x: single; y: single; z: single);
     procedure CalibrateMouse; stdcall;
-    constructor Create(TheIndex: cardinal);
-
 
 
   public
-    pos: RVec3;                        //World Position
+    pos: RVec3;//World Position
+    cam: RVec2; //camera horizontal
     TeamString: array[0..99] of char;  //Team name
     TeamStringLength: integer;
     PlayerNameString: array[0..99] of char;
@@ -41,7 +41,7 @@ type
     hp: integer;         //Health
     ClientNumber: DWORD; //ClientNumber (CN) (unused)
     IsSpectating: boolean;
-    BaseAddress: Pointer;
+    BaseAddress:  Pointer;
 
     CursorPosition: RVec2i; //Cursor Position needed for PixelSearch triggerbot
 
@@ -53,6 +53,16 @@ implementation
 
 { TPlayer }
 
+constructor TPlayer.Create(TheIndex: cardinal);
+begin
+  { ------------------------ Set Index In EntityList ----------------------- }
+  { -> 0 is localplayer                                                      }
+  Index := TheIndex;
+
+  { ----------------------------- Init Variables --------------------------- }
+  IsSpectating := False;
+end;
+
 procedure TPlayer.FindPlayerPointer; stdcall;
 var
   EntityList: Pointer; //Pointer to EntityList
@@ -62,8 +72,7 @@ begin
   { -> $29CD34 is the offset from sauerbraten.exe to the EntityList          }
   {    Pointer                                                               }
   { -> Index determines which entry in the list should be read               }
-  EntityList := Pointer(GetModuleHandle('sauerbraten.exe') + $3C9AD0);
-  //uptodate 2023/08/12
+  EntityList := Pointer(GetModuleHandle('sauerbraten.exe') + $3C9AD0);  //uptodate 2023/08/12
   List := Pointer(EntityList^);
   PlayerBase := Pointer(Pointer(List + Index * $4)^);
 
@@ -95,7 +104,7 @@ begin
     pos.y := PSingle(PlayerBase + $4)^;
     pos.z := PSingle(PlayerBase + $8)^;
 
-
+    cam.x  := PSingle(PlayerBase + $3C)^;
 
 
     { ----------------------------- Team String ---------------------------- }
@@ -103,8 +112,7 @@ begin
     {    $354 is the offset to team string                                   }
     { -> cycle through all chars of the string until we hit the null         }
     {    termination                                                         }
-    TeamStringPointer := Pointer(PlayerBase + $34C);
-    //fuck this //uptodate 2023/08/14 old $354
+    TeamStringPointer := Pointer(PlayerBase + $34C); //fuck this //uptodate 2023/08/14 old $354
     TeamStringCounter := 0;
     TeamStringLength := 0;
     while PChar(TeamStringPointer)[TeamStringCounter] <> char(0) do
@@ -121,8 +129,7 @@ begin
     { -> reading the playername to display on ESP                            }
     { -> cycle through all chars of the string until we hit the null         }
     {    termination                                                         }
-    PlayerNamePointer := Pointer(PlayerBase + $248);
-    //fuck this //uptodate 2023/08/14 old $250
+    PlayerNamePointer := Pointer(PlayerBase + $248); //fuck this //uptodate 2023/08/14 old $250
     PlayerNameCounter := 0;
     PlayerNameStringLength := 0;
     while PChar(PlayerNamePointer)[PlayerNameCounter] <> char(0) do
@@ -150,8 +157,7 @@ begin
       { -> client number                                                     }
       { -> relevant for identification                                       }
       { -> offset from playerbase = $1B4                                     }
-      ClientNumber := PDWORD(PlayerBase + $1B4)^;
-      // UNKNOWN 2023/08/14 i'll just leave it for now
+      ClientNumber := PDWORD(PlayerBase + $1B4)^; // UNKNOWN 2023/08/14 i'll just leave it for now
 
 
       { -------------------------- Read Spectating ------------------------- }
@@ -178,8 +184,7 @@ begin
   {    offset $216454 is a pointer to this struct. $3C is the offset to the  }
   {    horizontal camera angle and the vertical one is right next to it      }
 
-  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $317110);
-  //uptodate 2023/08/12
+  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $317110 );  //uptodate 2023/08/12
   addCamH := Pointer(Original^) + $3C;
   addCamV := addcamH + $4;
 
@@ -218,15 +223,6 @@ begin
   CursorPosition.y := CurPos.y;
 end;
 
-constructor TPlayer.Create(TheIndex: cardinal);
-begin
-  { ------------------------ Set Index In EntityList ----------------------- }
-  { -> 0 is localplayer                                                      }
-  Index := TheIndex;
-
-  { ----------------------------- Init Variables --------------------------- }
-  IsSpectating := False;
-  GetPlayerData();
-end;
-
 end.
+
+

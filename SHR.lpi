@@ -27,7 +27,7 @@
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
     </RunParams>
-    <Units Count="16">
+    <Units Count="17">
       <Unit0>
         <Filename Value="SHR.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -105,7 +105,13 @@
       <Unit15>
         <Filename Value="globalvars.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="GlobalVars"/>
       </Unit15>
+      <Unit16>
+        <Filename Value="globalobjects.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GlobalObjects"/>
+      </Unit16>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

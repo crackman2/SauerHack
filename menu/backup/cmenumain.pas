@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, gl, windows,
-  globalvars, cmenuwindow, ccontroldrawer, CustomTypes, DrawText;
+  GlobalVars, cmenuwindow, ccontroldrawer, CustomTypes, DrawText;
 
 type
 
@@ -29,8 +29,8 @@ type
     menuscale: single;
     MouseX:Single;
     MouseY:Single;
-    CheckBoxes:array [0..5] of TCheckbox;
-    CheckBoxStrings:array [0..5] of String;
+    CheckBoxes:array [0..6] of TCheckbox;
+    CheckBoxStrings:array [0..6] of String;
     CheckBoxNumber:Cardinal;
     dwLibMikModBase:DWORD;
     MenuPointersA:array of Pointer;
@@ -50,20 +50,15 @@ begin
   menudim.y := dimy;
   menutitle := title;
   menuscale := Scale;
-
-
+  
   SetLength(Self.MenuPointersA,Length(AMenuPointersA));
-  //Self.MenuPointersA:=AMenuPointersA;
   Move(AMenuPointersA[0],Self.MenuPointersA[0],Length(AMenuPointersA) * SizeOf(Pointer));
   CheckBoxNumber:=High(CheckBoxes);
-
-  { ------ View Main.pas for more info ------ }
-  //dwLibMikModBase:=GetModuleHandle('libmikmod-2.dll')+$35090; //old, dont use
 
   InitMain;
 end;
 
-procedure TMenu.InitMain;
+procedure TMenu.InitMain();
 var
   i:Cardinal;
 begin
@@ -75,6 +70,7 @@ begin
   CheckBoxStrings[3]:='Enable Noclipping';
   CheckBoxStrings[4]:='Enable Teleport all to you';
   CheckBoxStrings[5]:='Enable autocapture flag';
+  CheckBoxStrings[6]:='Enable Triggerbot';
 
   for i:= 0 to CheckBoxNumber do begin
       CheckBoxes[i]:= TCheckbox.Create(@mainwin, 10, 40+((8*menuscale)*i), CheckBoxStrings[i], menuscale, True, MenuPointersA[i]);
@@ -82,40 +78,32 @@ begin
 end;
 
 procedure TMenu.CheckDragWindow(mx: Single; my: Single);
-//var
-    //Dragging:Pointer=nil;
-    //MouseXOri:Pointer=nil;
-    //MouseYOri:Pointer=nil;
-    //MReleaser:PByte=nil;
-    //MenuPosX:Pointer=nil;
-    //MenuPosY:Pointer=nil;
 begin
-    //Dragging:=Pointer (cave + $508);
-    //MouseXOri:=Pointer(cave + $50C);
-    //MouseYOri:=Pointer(cave + $510);
-    //MReleaser:=PByte  (cave + $3F0);
-    //MenuPosX:=Pointer (cave + $500);
-    //MenuPosY:=Pointer (cave + $504);
-
-  if global_Dragging=1 then begin
-     global_MenuPosX:=mx-global_MouseXOri;
-     global_MenuPosY:=my-global_MouseYOri;
+  if g_Dragging=1 then begin
+     g_MenuPosX:=mx-g_MouseXOri;
+     g_MenuPosY:=my-g_MouseYOri;
   end
   else if (mx > menupos.x) and (mx < menupos.x + menudim.x) and
           (my > menupos.y) and (my < menupos.y + mainwin.TitleBarHeight) then
   begin
-    Dragging:=1;
-    global_MouseXOri:=mx - global_MenuPosX;
-    global_MouseYOri:=my - global_MenuPosY;
+    g_Dragging:=1;
+    g_MouseXOri:=mx - g_MenuPosX;
+    g_MouseYOri:=my - g_MenuPosY;
   end;
 
-  if global_MReleaser=0 then global_Dragging:=0;
+  if g_MReleaser=0 then g_Dragging:=0;
 end;
 
 procedure TMenu.DrawMenu;
 var
   i:Cardinal;
 begin
+  menupos.x:=g_MenuPosX;
+  menupos.y:=g_MenuPosY;
+
+  mainwin.pos.x:=g_MenuPosX;
+  mainwin.pos.y:=g_MenuPosY;
+
   mainwin.DrawWindow;
   for i:=0 to CheckBoxNumber do begin
       CheckBoxes[i].DrawCheckBox();
@@ -125,7 +113,7 @@ end;
 
 procedure TMenu.DrawCursor;
 var
-  viewp: array[0..3] of GLint;
+  viewp: array[0..3] of GLint = (0,0,0,0);
   PMouseX: Pointer;
   PMouseY: Pointer;
   MouseVec: array [0..3] of array [0..1] of single =
@@ -145,8 +133,8 @@ begin
   MouseY:=PSingle(PMouseY)^*viewp[3];
 
   { --- wiggle --- }
-  MouseVec[1][0]:=18.5+sin((global_pCounter/((PInteger(FPS)^/10)+1)))*2;
-  MouseVec[3][1]:=27+sin((global_pCounter/((PInteger(FPS)^/10)+1)))*2;
+  MouseVec[1][0]:=18.5+sin((g_pCounter/((PInteger(FPS)^/10)+1)))*2;
+  MouseVec[3][1]:=27+sin((g_pCounter/((PInteger(FPS)^/10)+1)))*2;
 
   glColor3f(1,1,1);
   glBegin(GL_QUADS);
@@ -170,7 +158,7 @@ var
   //MReleaser:PByte=nil;
   Clicked:Boolean=False;
   i:Cardinal;
-  viewp: array[0..3] of GLint;
+  viewp: array[0..3] of GLint = (0,0,0,0);
   PMouseX: Pointer;
   PMouseY: Pointer;
 begin
@@ -183,13 +171,13 @@ begin
   MouseX:=PSingle(PMouseX)^*viewp[2];
   MouseY:=PSingle(PMouseY)^*viewp[3];
 
-  if (GetAsyncKeyState($01) <> 0) and (global_MReleaser=0) then begin
+  if (GetAsyncKeyState($01) <> 0) and (g_MReleaser=0) then begin
     Clicked:=True;
-    global_MReleaser:=1;
+    g_MReleaser:=1;
   end;
 
   if (not (GetAsyncKeyState($01) <> 0)) and (not Clicked) then begin
-    global_MReleaser:=0;
+    g_MReleaser:=0;
   end;
 
   if Clicked then begin

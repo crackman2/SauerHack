@@ -7,27 +7,29 @@ interface
 uses
   Classes, SysUtils, Windows, gl, glu,
   { my stuff}
-  globalvars, CPlayer, CAimbot, cfunctioncaller, CESP, DrawText,
+  GlobalVars, GlobalObjects, CPlayer, CAimbot, cfunctioncaller, CESP, DrawText,
   CTeleportAllEnemiesToYou, CNoclip,
   CMenuMain, CFlagStealer;
 
 var
   { ----------------------------- Player Object ---------------------------- }
   { -> read position & team                                                  }
-  { -> set camera angles                                                     }
-  Player: TPlayer;
+  { -> set camera angles}
+  //Player: TPlayer;
+
 
 
   { ----------------------------- Aimbot Object ---------------------------- }
   { -> Target selection                                                      }
   { -> Aiming & auto trigger via                                             }
   {    color check                                                           }
-  Aimer: TAimbot;
+  //Aimer: TAimbot;
   CurrentBestTarget: integer;
   {EnableAimbot:PByte=nil;
   LockAim: PByte = nil;
   ReleasedRBM: PByte = nil;
   EnableLockAim:PByte=nil; }
+
 
 
   { -------------------------- Enemy Object Array -------------------------- }
@@ -36,47 +38,44 @@ var
   PlayerCount: integer;
 
 
+
   { ------------------------------ ESP Object ------------------------------ }
   { -> draw enemies on screen                                                }
-  esp: TESP;
-  //EnableESP:PByte=nil;
+  //esp: TESP;
+
 
 
   { ------------------------------ TATY Object ----------------------------- }
   { -> teleport everyone to you                                              }
   { -> may cause death                                                       }
-  taty: TTeleAETY;
-  //EnableTATY:PByte=nil;
+  //taty: TTeleAETY;
+
 
 
   { ----------------------------- Noclip Object ---------------------------- }
   { -> fly around                                                            }
-  noclip: TNoclip;
-  {EnableNoclip: PByte;
-  NoclipButtonPressed: PByte;
-  EnableNoclipping:PByte=nil;}
+  //noclip: TNoclip;
+
 
 
   { ------------------------------ Menu Object ----------------------------- }
   { -> draws menu for controlling                                            }
   {    settings                                                              }
-  Menu: TMenu;
-  {MenuPosX:Pointer=nil;
-  MenuPosY:Pointer=nil;}
+  //Menu: TMenu;
   EnableMenu: PByte = nil;
 
 
-  { --------------------------- FlagStealer Object ------------------------- }
-  { -> Save location of both flags                                           }
-  { -> teleport back and forth                                               }
-  FlagStealer: TFlagStealer;
+{ --------------------------- FlagStealer Object ------------------------- }
+{ -> Save location of both flags                                           }
+{ -> teleport back and forth                                               }
+//FlagStealer: TFlagStealer;
 //EnableFlagSteal:PByte=nil;
 
 
 { ---------------------------- Debug Screen F1 --------------------------- }
 { -> Shows information                                                     }
-  {EnableDebug: PByte;
-  DebugButtonPressed: PByte;}
+    {EnableDebug: PByte;
+    DebugButtonPressed: PByte;}
 
 
 { ---------------------------- Counter Pointer --------------------------- }
@@ -93,23 +92,26 @@ procedure PollAimbot();
 procedure glEnter2DDrawingMode; stdcall;
 procedure glLeave2DDrawingMode; stdcall;
 procedure DrawDebugLine();
+procedure ShowMissingObjectError(MissingObjectName: PChar);
+
+
 
 implementation
 
 procedure MainFunc();
 var
   i: cardinal; //for loop counter
-  oldGLContext: HGLRC;
+  OldRC: HGLRC;
 begin
   { ------------------------ Prepare OpenGL Drawing ------------------------ }
-  { -> oldGLContext is the current context used by the game. Apparently it   }
+  { -> OldRC is the current context used by the game. Apparently it   }
   {    is impossible to use in it's current state for our purposes, so we    }
   {    just create a new one                                                 }
   { -> caveHDC is the device context, grabbed frome the wglSwapBuffers call  }
   { -> caveNewRC is a new device context that was created when the hook code }
   {    was run the first time                                                }
-  oldGLContext := wglGetCurrentContext;
-  wglMakeCurrent(caveHDC, caveNewRC);
+  OldRC := wglGetCurrentContext;
+  wglMakeCurrent(g_HDC, g_NewRC);
   glEnter2DDrawingMode;
 
   { ------------------------------- pCounter ------------------------------- }
@@ -117,7 +119,7 @@ begin
   {    omitted                                                               }
   //pCounter:=Pointer(cave + $300);
   //inc(PCardinal(pCounter)^);
-  Inc(global_pCounter);
+  Inc(g_pCounter);
 
 
   { ----------------------------- Init Pointers ---------------------------- }
@@ -133,28 +135,6 @@ begin
   EnableFlagSteal:=PByte  (cave + $614);}
 
 
-  { ---------------------- Initial Values for Pointers --------------------- }
-  if global_MenuInitialSetup = 0 then
-  begin
-    global_EnableAimbot := 1;
-    global_EnableESP := 1;
-    global_EnableNoclipping := 1;
-    global_EnableLockAim := 1;
-    EnableMenu := PByte(GetModuleHandle('sauerbraten.exe') + $30D0E8);
-    //uptodate 09/08/2023
-    global_MenuInitialSetup := 1;
-    global_MenuPosX := 50;
-    global_MenuPosY := 50;
-
-    SetLength(global_MenuPointers, 6);
-
-    global_MenuPointers[0] := @global_EnableESP;
-    global_MenuPointers[1] := @global_EnableAimbot;
-    global_MenuPointers[2] := @global_EnableLockAim;
-    global_MenuPointers[3] := @global_EnableNoclipping;
-    global_MenuPointers[4] := @global_EnableTATY;
-    global_MenuPointers[5] := @global_EnableFlagSteal;
-  end;
 
 
   { ------------------------- Object Initialization ------------------------ }
@@ -164,23 +144,42 @@ begin
   { -> calls constructor for the esp object                                  }
   { -> calls constructor for the aimbot object                               }
   GetPlayerCount();
-  Player := TPlayer.Create(0);
+  //Player := TPlayer.Create(0);
 
 
   //taty := TTeleAETY.Create(@Player, @Enemy, PlayerCount);   COMMENTED FOR DEBUG
-  noclip := TNoclip.Create;
-  Menu := TMenu.Create(global_MenuPosX, global_MenuPosY, 426, 185, 'SauerHack Reloaded', 3,
-    global_MenuPointers);
+  //noclip := TNoclip.Create;
+  //Menu := TMenu.Create(g_MenuPosX, g_MenuPosY, 426, 185, 'SauerHack Reloaded', 3, g_MenuPointers);
   //FlagStealer:=TFlagStealer.Create(); COMMENTED FOR DEBUG
+
   i := 1;
   while (i <= PlayerCount) do
   begin
     Enemy[i] := TPlayer.Create(i);
+    Enemy[i].GetPlayerData;
     Inc(i);
   end;
 
-  esp := TESP.Create(Player, Enemy, PlayerCount);
-  Aimer := TAimbot.Create(Player, Enemy);
+  if Assigned(g_Player) then
+    g_Player.GetPlayerData;
+  if Assigned(g_Aimer) then
+    g_Aimer.SetEnemyArray(Enemy);
+
+
+
+
+  //esp := TESP.Create(Player, Enemy, PlayerCount);
+  //Aimer := TAimbot.Create(Player, Enemy);
+  if Assigned(g_ESP) then
+  begin
+    g_ESP.SetEnemyArray(Enemy);
+    g_ESP.SetPlayerCount(PlayerCount);
+  end
+  else
+  begin
+    ShowMissingObjectError('g_ESP');
+  end;
+
 
 
 
@@ -195,7 +194,7 @@ begin
 
 
   { --------------------------------- TATY --------------------------------- }
-  if (GetAsyncKeyState(VK_X) <> 0) and (global_EnableTATY = 1) then
+  if (GetAsyncKeyState(VK_X) <> 0) and (g_EnableTATY = 1) then
   begin
     //taty.TeleportAllEnemiesInfrontOfYou();  COMMENTED FOR DEBUG
   end;
@@ -204,7 +203,7 @@ begin
   { ----------------------------- FlagStealer ------------------------------ }
   { -> teleport between flags                                                }
   { -> infinite points                                                       }
-  if (GetAsyncKeyState(VK_P) <> 0) and (global_EnableFlagSteal = 1) then
+  if (GetAsyncKeyState(VK_P) <> 0) and (g_EnableFlagSteal = 1) then
   begin
     //FlagStealer.SpamTeleport();             COMMENTED FOR DEBUG
   end;
@@ -213,8 +212,12 @@ begin
   { -------------------------------- Noclip -------------------------------- }
   { -> lets you fly around the map                                           }
   { -> toggles with 'V'                                                      }
-  if noclip <> nil then
-    PollNoclip();
+  if Assigned(g_Noclip) then
+    PollNoclip()
+  else
+  begin
+    ShowMissingObjectError('g_Noclip');
+  end;
 
 
   { ---------------------------- Debug Screen F1 --------------------------- }
@@ -223,10 +226,11 @@ begin
   PollDebug();
 
 
+
   { ----------------------------- Drawing ESP ------------------------------ }
   { -> draws red boxes around enemy player                                   }
-  if global_EnableESP = 1 then
-    esp.DrawESP();
+  if g_EnableESP = 1 then
+    g_ESP.DrawESP();
 
 
 
@@ -239,21 +243,29 @@ begin
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_LINE_SMOOTH);
     glLineWidth(1);
-    Menu.PollControls;
-    Menu.DrawMenu;
+    if Assigned(g_Menu) then
+    begin
+      g_Menu.PollControls;
+      g_Menu.DrawMenu;
+    end
+    else
+    begin
+      ShowMissingObjectError('g_Menu');
+    end;
   end;
 
 
 
   { --------------------------- Object Destroyer --------------------------- }
   { -> prevent leaks.                                                        }
-  Aimer.Destroy;
-  Player.Destroy;
-  esp.Destroy;
+  //Aimer.Destroy;
+  //Player.Destroy;
+  //esp.Destroy;
   //taty.Destroy;                             COMMENTED FOR DEBUG
-  noclip.Destroy;
-  Menu.Destroy;
+  //noclip.Destroy;
+  //Menu.Destroy;
   //FlagStealer.Destroy;                      COMMENTED FOR DEBUG
+
   i := 1;
   while (i <= PlayerCount) do
   begin
@@ -262,12 +274,12 @@ begin
   end;
 
 
+
   { ------------------------------ Debug Line ------------------------------ }
   { -> confirms hack is active                                               }
-  DrawDebugLine;
-
+ { DrawDebugLine;     }
   glLeave2DDrawingMode;
-  wglMakeCurrent(caveHDC, oldGLContext);
+  wglMakeCurrent(g_HDC, OldRC);
 end;
 
 
@@ -284,24 +296,24 @@ end;
 procedure PollDebug();
 begin
 
-  if (GetAsyncKeyState(VK_F1) <> 0) and (global_DebugButtonPressed = 0) and
-    (global_EnableDebug = 0) then
+  if (GetAsyncKeyState(VK_F1) <> 0) and (g_DebugButtonPressed = 0) and
+    (g_EnableDebug = 0) then
   begin
-    global_EnableDebug := 1;
-    global_DebugButtonPressed := 1;
+    g_EnableDebug := 1;
+    g_DebugButtonPressed := 1;
   end;
 
-  if (GetAsyncKeyState(VK_F1) <> 0) and (global_DebugButtonPressed = 0) and
-    (global_EnableDebug = 1) then
+  if (GetAsyncKeyState(VK_F1) <> 0) and (g_DebugButtonPressed = 0) and
+    (g_EnableDebug = 1) then
   begin
-    global_EnableDebug := 0;
-    global_DebugButtonPressed := 1;
+    g_EnableDebug := 0;
+    g_DebugButtonPressed := 1;
   end;
 
   if (GetAsyncKeyState(VK_F1) = 0) then
-    global_DebugButtonPressed := 0;
+    g_DebugButtonPressed := 0;
 
-  if global_EnableDebug = 1 then
+  if g_EnableDebug = 1 then
   begin
     ShowDebugMenu();
   end;
@@ -318,9 +330,9 @@ var
 begin
   glColor3f(0.8, 0.8, 0.8);
   glxDrawString(X, Y + 000, '::Debug Screen::', 2, True);
-  glxDrawString(X, Y + 015, 'posx: ' + IntToStr(round(Player.pos.x)), 2, True);
-  glxDrawString(X, Y + 030, 'posy: ' + IntToStr(round(Player.pos.y)), 2, True);
-  glxDrawString(X, Y + 045, 'posz: ' + IntToStr(round(Player.pos.z)), 2, True);
+  glxDrawString(X, Y + 015, 'posx: ' + IntToStr(round(g_Player.pos.x)), 2, True);
+  glxDrawString(X, Y + 030, 'posy: ' + IntToStr(round(g_Player.pos.y)), 2, True);
+  glxDrawString(X, Y + 045, 'posz: ' + IntToStr(round(g_Player.pos.z)), 2, True);
 
 
   Help[00] := '- right click to aim at target';
@@ -358,16 +370,16 @@ begin
   }
 
 
-  Globals[00] := 'LockAim: ' + IntToStr(global_LockAim);
-  Globals[01] := 'ReleasedRBM: ' + IntToStr(global_ReleasedRBM);
-  Globals[02] := 'MenuPosX: ' + FloatToStr(global_MenuPosX);
-  Globals[03] := 'MenuPosY: ' + FloatToStr(global_MenuPosY);
-  Globals[04] := 'EnableESP: ' + IntToStr(global_EnableESP);
-  Globals[05] := 'EnableAimbot: ' + IntToStr(global_EnableAimbot);
-  Globals[06] := 'EnableLockAim: ' + IntToStr(global_EnableLockAim);
-  Globals[07] := 'EnableNoclipping: ' + IntToStr(global_EnableNoclipping);
-  Globals[08] := 'EnableTATY: ' + IntToStr(global_EnableTATY);
-  Globals[09] := 'EnableFlagSteal: ' + IntToStr(global_EnableFlagSteal);
+  Globals[00] := 'LockAim: ' + IntToStr(g_LockAim);
+  Globals[01] := 'ReleasedRBM: ' + IntToStr(g_ReleasedRBM);
+  Globals[02] := 'MenuPosX: ' + FloatToStr(g_MenuPosX);
+  Globals[03] := 'MenuPosY: ' + FloatToStr(g_MenuPosY);
+  Globals[04] := 'EnableESP: ' + IntToStr(g_EnableESP);
+  Globals[05] := 'EnableAimbot: ' + IntToStr(g_EnableAimbot);
+  Globals[06] := 'EnableLockAim: ' + IntToStr(g_EnableLockAim);
+  Globals[07] := 'EnableNoclipping: ' + IntToStr(g_EnableNoclipping);
+  Globals[08] := 'EnableTATY: ' + IntToStr(g_EnableTATY);
+  Globals[09] := 'EnableFlagSteal: ' + IntToStr(g_EnableFlagSteal);
 
   for i := 0 to Length(Globals) - 1 do
   begin
@@ -379,65 +391,65 @@ end;
 
 procedure PollNoclip();
 begin
-
-  if (GetAsyncKeyState(VK_V) <> 0) and (global_NoclipButtonPressed = 0) and
-    (global_EnableNoclip = 0) and (global_EnableNoclipping = 1) then
+  if (GetAsyncKeyState(VK_V) <> 0) and (g_NoclipButtonPressed = 0) and
+    (g_EnableNoclip = 0) and (g_EnableNoclipping = 1) then
   begin
-    global_EnableNoclip := 1;
-    global_NoclipButtonPressed := 1;
+    g_EnableNoclip := 1;
+    g_NoclipButtonPressed := 1;
   end;
 
-  if (GetAsyncKeyState(VK_V) <> 0) and (global_NoclipButtonPressed = 0) and
-    (global_EnableNoclip = 1) then
+  if (GetAsyncKeyState(VK_V) <> 0) and (g_NoclipButtonPressed = 0) and
+    (g_EnableNoclip = 1) then
   begin
-    global_EnableNoclip := 0;
-    global_NoclipButtonPressed := 1;
+    g_EnableNoclip := 0;
+    g_NoclipButtonPressed := 1;
   end;
 
   if (GetAsyncKeyState(VK_V) = 0) then
-    global_NoclipButtonPressed := 0;
+    g_NoclipButtonPressed := 0;
 
-  if global_EnableNoclip = 1 then
+  if g_EnableNoclip = 1 then
   begin
-    noclip.PollControls;
-    noclip.NOPFalling(True);
-    noclip.ZeroVelocities();
+    g_Noclip.PollControls;
+    g_Noclip.NOPFalling(True);
+    g_Noclip.ZeroVelocities();
   end
   else
   begin
-    noclip.NOPFalling(False);
+    g_Noclip.NOPFalling(False);
   end;
 end;
 
 procedure PollAimbot();
 begin
-  if Assigned(Aimer) then
+  g_Aimer.ShootByte^ := 0;
+  if Assigned(g_Aimer) then
   begin
-    if (global_EnableAimbot = 1) and (global_EnableLockAim = 1) then
+    if (g_EnableAimbot = 1) and (g_EnableLockAim = 1) then
     begin
       if not (GetAsyncKeyState($1) <> 0) then
-        Aimer.ShootByte^ := $0;
+        g_Aimer.ShootByte^ := $0;
       if (GetAsyncKeyState($2) <> 0) then
       begin
-        if global_ReleasedRBM = 1 then
+        if g_ReleasedRBM = 1 then
         begin
-          global_LockAim := 1;
-          CurrentBestTarget := Aimer.GetBestTarget(PlayerCount);
-          global_ReleasedRBM := 0;
+          g_LockAim := 1;
+          CurrentBestTarget := g_Aimer.GetBestTarget(PlayerCount);
+          g_ReleasedRBM := 0;
         end;
       end
       else
       begin
-        global_ReleasedRBM := 1;
+        g_ReleasedRBM := 1;
       end;
 
-      if (global_LockAim = 1) and (global_ReleasedRBM = 0) then
+      if (g_LockAim = 1) and (g_ReleasedRBM = 0) then
       begin
         if Enemy[CurrentBestTarget] <> nil then
         begin
           if Enemy[CurrentBestTarget].hp <= 0 then
           begin
-            global_LockAim := 0;
+            g_LockAim := 0;
           end
           else
           begin
@@ -447,32 +459,36 @@ begin
               // MessageBox(0, PChar('Current Target: 0x' +
               //   IntToHex(DWORD(Enemy[CurrentBestTarget].PlayerBase), 8)), 'e', 0);
             end;
-            Aimer.Aim(CurrentBestTarget);
-            Aimer.AutoTrigger();
+            g_Aimer.Aim(CurrentBestTarget);
+            g_Aimer.AutoTrigger();
           end;
         end
         else
         begin
-          global_LockAim := 0;
+          g_LockAim := 0;
         end;
       end
       else
       begin
-        global_LockAim := 0;
+        g_LockAim := 0;
       end;
     end;
 
-    if (global_EnableAimbot = 1) and (global_EnableLockAim = 0) then
+    if (g_EnableAimbot = 1) and (g_EnableLockAim = 0) then
     begin
       if not (GetAsyncKeyState($1) <> 0) then
-        Aimer.ShootByte^ := $0;
+        g_Aimer.ShootByte^ := $0;
       if (GetAsyncKeyState($2) <> 0) then
       begin
-        Aimer.Aim(Aimer.GetBestTarget(PlayerCount));
-        Aimer.AutoTrigger();
+        g_Aimer.Aim(g_Aimer.GetBestTarget(PlayerCount));
+        if (g_EnableTriggerbot = 1) then
+          g_Aimer.AutoTrigger();
       end;
     end;
   end;
+
+  if (g_EnableTriggerbot = 1) and (GetAsyncKeyState($2) <> 0) then
+    g_Aimer.AutoTrigger();
 end;
 
 { -------------------------- glEnter2DDrawingMode -------------------------- }
@@ -482,7 +498,7 @@ end;
 {    equal to the current resolution                                         }
 procedure glEnter2DDrawingMode; stdcall;
 var
-  viewport: array[0..3] of GLint;
+  viewport: array[0..3] of GLint = (0,0,0,0);
 begin
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -506,26 +522,31 @@ end;
 
 procedure DrawDebugLine();
 var
-  c: single;
+  c1: single;
   i: cardinal;
-  FPS:PInteger;
+  FPS: PInteger;
 
 begin
-
   FPS := Pointer(GetModuleHandle('sauerbraten.exe') + $39A644);
 
-  c := global_pCounter / PInteger(FPS)^;
+  c1 := g_pCounter / (FPS^*2);
 
-  for i := 0 to 30 do
+  for i := 0 to (round(c1) mod (FPS^*2)) do
   begin
-    glColor3f(c / i, c * i, i / 30);
-    glLineWidth(i / 10);
+    glColor3f((Round(c1+i) mod 50)/50,(Round(c1+i/2) mod 100)/100,(Round(c1+i/4) mod 25)/25);
+    glLineWidth(1);
     glBegin(GL_LINES);
-    glVertex2f(cos(c * i) * (i), i + sin(c * i) * (i));
-    glVertex2f(i + cos(c * (i + 1)) * (i), sin(c * (i + 1)) * (i));
+    glVertex2f(30.0 + cos(i+ c1 + c1) * (40*sin(c1))     , 30.0 + sin(i+c1) * (40*sin(c1)));
+    glVertex2f(30.0 + cos(i + 1) * (40*sin(c1))    , 30.0 + sin(i+ 1) * (40*sin(c1)));
+
     glEnd();
   end;
 end;
 
+procedure ShowMissingObjectError(MissingObjectName: PChar);
+begin
+  MessageBox(0, PChar(MissingObjectName + ' is not Assigned. Exiting.'), 'Kresch', 0);
+  ExitProcess(1);
+end;
 
 end.

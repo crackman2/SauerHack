@@ -83,7 +83,7 @@ end;
 
 procedure TNoclip.PollControls; stdcall;
 var
-  viewp: array [0..3] of Glint;
+  viewp: array [0..3] of Glint = (0,0,0,0);
 begin
   if GetAsyncKeyState(VK_LSHIFT) <> 0 then
     SpeedCurrent := SpeedFast;

@@ -44,9 +44,9 @@ var
 begin
   Sauerbase:=Pointer(GetModuleHandle('sauerbraten.exe'));
 
-  FlipFlop:=PByte(cave + $700);
+  FlipFlop:=PByte(g_cave + $700);
 
-  Original:=Pointer(Sauerbase Aimbot+ $29D200);
+  Original:=Pointer(Sauerbase + $29D200);
   BlueFlagPointer:=Pointer(Original^) + $88;
 
   Original:=Pointer(Sauerbase + $29D200);

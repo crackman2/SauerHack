@@ -7,7 +7,8 @@ interface
 uses
   Classes, SysUtils, Windows, gl,
   { my stuff }
-  Main, globalvars;
+  Main, GlobalVars, GlobalObjects, CPlayer, CAimbot, CESP, CTeleportAllEnemiesToYou, CNoclip, CMenuMain,
+  CFlagStealer;
 var
   SBuffers:DWORD;
 
@@ -18,6 +19,7 @@ procedure HookSwapBuffers();stdcall;
 procedure WriteJump(J_FROM: DWORD; J_TO: DWORD; J0C1: boolean); stdcall;
 procedure CreateRenderingContext(); stdcall;
 procedure CodeCaveCodeASM(); stdcall;
+procedure InitGlobalObjects(); stdcall;
 
 implementation
 
@@ -46,9 +48,9 @@ begin
 
   if (VirtualProtect(CodeCave,8192,PAGE_EXECUTE_READWRITE,@Garbage)) then begin
       VirtualProtect(Pointer(SBuffers),5,PAGE_EXECUTE_READWRITE,@Garbage);
-      cave:=Pointer(DWORD(CodeCave) + 32); { setup cave pointer     }
-      caveHDC:=0;                          { setup device context   }
-      caveNewRC:=0;                        { setup rendering context}
+      g_cave:=Pointer(DWORD(CodeCave) + 32); { setup cave pointer     }
+      g_HDC:=0;                          { setup device context   }
+      g_NewRC:=0;                        { setup rendering context}
 
 
       WriteJump(SBuffers,DWORD(CodeCave), False);
@@ -65,6 +67,7 @@ begin
 
       WriteJump(DWORD(CodeCave)+14,SBuffers+5,False);
 
+      InitGlobalObjects();
   end
   else begin
       ErrorMsg := SysErrorMessage(GetLastError);
@@ -112,11 +115,11 @@ end;
 { -> this can then be switched to before drawing calls in MainFunc           }
 procedure CreateRenderingContext(); stdcall;
 begin
-    if caveHDC <> 0  then
+    if g_HDC <> 0  then
     begin
-      if caveNewRC = 0 then begin
-          caveNewRC:= wglCreateContext(HDC(caveHDC));
-          if caveNewRC = 0 then
+      if g_NewRC = 0 then begin
+          g_NewRC:= wglCreateContext(HDC(g_HDC));
+          if g_NewRC = 0 then
           begin
               MessageBox(0,'wglCreateContext did not work','Error',0);
           end;
@@ -138,10 +141,47 @@ begin
   {$ASMMODE intel}
   asm
      mov eax, [esp + $30] //grabs HDC from Stack
-     mov caveHDC, eax     //and stores it
+     mov g_HDC, eax     //and stores it
   end;
      CreateRenderingContext();
      MainFunc();
+end;
+
+{ ---------------------------- InitGlobalObjects --------------------------- }
+{ -> GlobalVars unit contains Objects that need to be initialized            }
+{ -> We should only need to do it once, so we do it here                     }
+procedure InitGlobalObjects(); stdcall;
+begin
+  g_Player:= TPlayer.Create(0);
+  g_Aimer := TAimbot.Create(g_Player);
+  g_ESP   := TESP.Create(g_Player);
+  g_TATY  := TTeleAETY.Create(g_Player);
+  g_FlagStealer:= TFlagStealer.Create(g_Player);
+  g_Noclip:= TNoclip.Create();
+
+  { ---------------------- Initial Values for Pointers --------------------- }
+  { -> mostly used for the TMenu object, so that's why it's here             }
+  g_EnableAimbot := 1;
+  g_EnableTriggerbot:=1;
+  g_EnableESP := 1;
+  g_EnableNoclipping := 1;
+  g_EnableLockAim := 1;
+  EnableMenu := PByte(GetModuleHandle('sauerbraten.exe') + $30D0E8);
+  //uptodate 09/08/2023
+  g_MenuInitialSetup := 1;
+  g_MenuPosX := 50;
+  g_MenuPosY := 50;
+
+  SetLength(g_MenuPointers, 7);
+
+  g_MenuPointers[0] := @g_EnableESP;
+  g_MenuPointers[1] := @g_EnableAimbot;
+  g_MenuPointers[2] := @g_EnableLockAim;
+  g_MenuPointers[3] := @g_EnableNoclipping;
+  g_MenuPointers[4] := @g_EnableTATY;
+  g_MenuPointers[5] := @g_EnableFlagSteal;
+  g_MenuPointers[6] := @g_EnableTriggerbot;
+  g_Menu  := TMenu.Create(g_MenuPosX, g_MenuPosY, 426, 209, 'SauerHack Reloaded', 3, g_MenuPointers);
 end;
 
 end.

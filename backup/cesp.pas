@@ -16,7 +16,9 @@ type
   PTEnArr = ^TEnArr;
 
   TESP = class
-    constructor Create(ply: TPlayer; en: TEnArr; PlrCounter: cardinal);
+    constructor Create(ply: TPlayer);
+    procedure SetEnemyArray(en: TEnArr);
+    procedure SetPlayerCount(plrcnt: cardinal);
     procedure DrawLine(StartX: single; StartY: single; EndX: single;
       EndY: single; LineTickness: single); stdcall;
     procedure DrawBox(top: single; left: single; bottom: single;
@@ -25,9 +27,11 @@ type
     procedure DrawESP(); stdcall;
     function IsTeamBased(): boolean; stdcall;
     procedure Draw3DBox(Index: cardinal; lw: single); stdcall;
-
-
-
+    procedure Draw3DCamXArrow(Index: cardinal; lw: single); stdcall;
+    function GetDirectionVector(Origin:RVec3; CameraAngles:RVec2; Length:Single): RVec3;
+    function NormalizeVec3(const vec: RVec3): RVec3;
+    function RotateVec3(const vec: RVec3; const axis: RVec3; angle: Single): RVec3;
+    function RotateDoubleVec3(const RotationAxis, Rotatee: RDoubleVec3; Angle: Single): RDoubleVec3;
 
 
 
@@ -46,13 +50,26 @@ implementation
 { -------------------- TESP Constructor -------------------- }
 { -> assings pointers to the localplayer and the enemy array }
 { -> assings playercount to internal variable                }
-constructor TESP.Create(ply: TPlayer; en: TEnArr; PlrCounter: cardinal);
+constructor TESP.Create(ply: TPlayer);
 begin
-  Self.en := en;
   Self.ply := ply;
-  plrcnt := PlrCounter;
 end;
 
+{ ------------------------------ SetEnemyArray ----------------------------- }
+{ -> en must be set before anything can be done, really                      }
+{ -> the enemy array is created in MainFunc                                  }
+procedure TESP.SetEnemyArray(en: TEnArr);
+begin
+  Self.en := en;
+end;
+
+{ ------------------------------ SetPlayerCount ----------------------------- }
+{ -> plrcnt must be set before anything can be done, really                   }
+{ -> the playercount is found during the main loop                            }
+procedure TESP.SetPlayerCount(plrcnt: cardinal);
+begin
+  Self.plrcnt := plrcnt;
+end;
 
 procedure TESP.DrawLine(StartX: single; StartY: single; EndX: single;
   EndY: single; LineTickness: single);
@@ -129,6 +146,7 @@ begin
             glColor3f(1, 0, 0);
             //DrawBox(pHead.y,pHead.x - (dWidth/2),pFeet.y, pHead.x + (dWidth/2)  ,abs(dHeight/80));//2d box
             Draw3DBox(i, abs(dHeight / 80)); //3d box
+            Draw3DCamXArrow(i, abs(dHeight / 80));
             //glColor3f(0,2,0);//2d box
 
 
@@ -194,11 +212,39 @@ var
   { --- 2D HP Vector --- }
   sHealthBar: RVec2;
 
-  { --- Box Width --- }
+  { ----- Box Width ---- }
   bw: single = 3.75;
 
   bFailed: boolean = False;
 begin
+  { ------ Zeroing ----- }
+  Head3D := RVec3_Create(0, 0, 0);
+  HNE := RVec3_Create(0, 0, 0);
+  HNW := RVec3_Create(0, 0, 0);
+  HSW := RVec3_Create(0, 0, 0);
+  HSE := RVec3_Create(0, 0, 0);
+
+  Feet3D:= RVec3_Create(0, 0, 0);
+  FNE:= RVec3_Create(0, 0, 0);
+  FNW:= RVec3_Create(0, 0, 0);
+  FSW:= RVec3_Create(0, 0, 0);
+  FSE:= RVec3_Create(0, 0, 0);
+
+  HealthBar:= RVec3_Create(0, 0, 0);
+
+  sHNE:=RVec2_Create(0,0);
+  sHNW:=RVec2_Create(0,0);
+  sHSW:=RVec2_Create(0,0);
+  sHSE:=RVec2_Create(0,0);
+
+  sFNE:=RVec2_Create(0,0);
+  sFNW:=RVec2_Create(0,0);
+  sFSW:=RVec2_Create(0,0);
+  sFSE:=RVec2_Create(0,0);
+
+  sHealthBar:=RVec2_Create(0,0);
+
+  { --- Actual Beginning --- }
 
   Head3D := en[Index].pos;
   Feet3D := en[Index].pos;
@@ -326,8 +372,8 @@ function TESP.glW2S(plypos: RVec3): boolean; stdcall;
 var
   Clip: RVec4;
   NDC: RVec3;
-  viewp: array[0..3] of GLint;
-  depthr: array[0..1] of GLfloat;
+  viewp: array[0..3] of GLint = (0,0,0,0);
+  depthr: array[0..1] of GLfloat = (0,0);
   i: cardinal;
   VMBase: cardinal;
   ViewMatrx: MVPmatrix;
@@ -403,6 +449,168 @@ begin
   end;
 
 end;
+
+procedure TESP.Draw3DCamXArrow(Index: cardinal; lw: single); stdcall;
+var
+  { ------------------------------ 3D Elements ----------------------------- }
+  ArrowBase: RVec3;
+  ArrowTip: RVec3;
+  ArrowBlades: array [0..15] of RVec3;
+  ArrowBladeAngles: array [0..15] of RVec2;
+
+
+  { ---------------------------- 2D Projections ---------------------------- }
+  sArrowBase: RVec2;
+  sArrowTip: RVec2;
+  sArrowBlades: array [0..15] of RVec2;
+
+  { ------------------------------ Black Magic ----------------------------- }
+  RotationAxis:RDoubleVec3;
+  Rotatee:RDoubleVec3;
+  ResultStorage:RDoubleVec3;
+
+  { ------------------------------- Settings ------------------------------- }
+  Length: single = 10;
+  BladeAngle:Single = 1;
+  BladeDistFrombase:Single = 9.5;
+
+  { ------------------------------ Error Check ----------------------------- }
+  bFailed: boolean = False;
+
+  { --------------------------------- Misc --------------------------------- }
+  i:Cardinal=0;
+begin
+  { -------------------------------- Zeroing ------------------------------- }
+  ArrowBase:=RVec3_Create(0,0,0);
+  ArrowTip:=RVec3_Create(0,0,0);
+
+  sArrowBase:=RVec2_Create(0,0);
+  sArrowTip:=RVec2_Create(0,0);
+
+  for i:=0 to High(sArrowBlades) do sArrowBlades[i]:=RVec2_Create(0,0);
+  for i:=0 to High(ArrowBladeAngles) do ArrowBladeAngles[i]:=RVec2_Create(0,0);
+
+  { ----------------------------- Basic Values ----------------------------- }
+  ArrowBase := en[Index].pos;
+  ArrowTip := ArrowBase;
+
+
+  { --------------------------- Main Arrow Vector -------------------------- }
+  ArrowTip:=GetDirectionVector(ArrowBase, en[Index].cam, Length);
+
+
+  { ------------------------- Arrow Blade Vectors -------------------------- }
+
+
+  RotationAxis.Base:=ArrowBase;
+  RotationAxis.Tip:=ArrowTip;
+
+  Rotatee.Base:=ArrowBase;
+  ArrowBladeAngles[0]:=en[Index].cam;
+  ArrowBladeAngles[0].x+=BladeAngle;
+  Rotatee.Tip:=GetDirectionVector(ArrowBase, ArrowBladeAngles[0] , Length);
+
+  for i:=0 to High(ArrowBlades) do begin
+    ResultStorage:=RotateDoubleVec3(RotationAxis,Rotatee,(360/High(ArrowBlades))*i);
+    ArrowBlades[i]:=ResultStorage.Tip;
+  end;
+
+
+
+
+  if not glW2S(ArrowBase) then
+    bFailed := True
+  else
+    sArrowBase := scrcord;
+  if not glW2S(ArrowTip) then
+    bFailed := True
+  else
+    sArrowTip := scrcord;
+
+  for i:=0 to High(ArrowBlades) do begin
+    if not glW2S(ArrowBlades[i]) then begin
+       bFailed := True
+    end else begin
+       sArrowBlades[i]:=scrcord;
+    end;
+  end;
+
+
+  if not bFailed then
+  begin
+    glColor3f(0.8, 1, 1);
+    DrawLine(sArrowBase.x, sArrowBase.y, sArrowTip.x, sArrowTip.y, lw * 2);
+    for i:=0 to High(ArrowBlades) do
+    DrawLine(sArrowTip.x,sArrowTip.y,sArrowBlades[i].x,sArrowBlades[i].y,lw*2);
+  end;
+end;
+
+
+{ --------------------------- GetDirectionVector --------------------------- }
+{ -> Returns a RVec3 that is "Length" units away from the Origin in the      }
+{    direction the angles were pointing                                      }
+{ -> functions like this should get their own unit, something like this is   }
+{    also used in CNoclip                                                    }
+function TESP.GetDirectionVector(Origin:RVec3; CameraAngles:RVec2; Length:Single): RVec3;
+begin
+  Result:=Origin;
+  Result.x += cos((CameraAngles.x + 90) / 57.2958) * Length * (1.57079576 - (abs((CameraAngles.y / 57.2958))));
+  Result.y += sin((CameraAngles.x + 90) / 57.2958) * Length * (1.57079576 - (abs((CameraAngles.y / 57.2958))));
+  Result.z += sin((CameraAngles.y / 57.2958));
+end;
+
+
+function NormalizeVec3(const vec: RVec3): RVec3;
+var
+  len: Single;
+begin
+  len := sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+  Result.x := vec.x / len;
+  Result.y := vec.y / len;
+  Result.z := vec.z / len;
+end;
+
+function RotateVec3(const vec: RVec3; const axis: RVec3; angle: Single): RVec3;
+var
+  sinHalfAngle, cosHalfAngle: Single;
+begin
+  angle := angle * Pi / 180; // Convert angle to radians
+  sinHalfAngle := Sin(angle * 0.5);
+  cosHalfAngle := Cos(angle * 0.5);
+
+  Result.x := (cosHalfAngle * vec.x) + (sinHalfAngle * (axis.y * vec.z - axis.z * vec.y));
+  Result.y := (cosHalfAngle * vec.y) + (sinHalfAngle * (axis.z * vec.x - axis.x * vec.z));
+  Result.z := (cosHalfAngle * vec.z) + (sinHalfAngle * (axis.x * vec.y - axis.y * vec.x));
+end;
+
+function RotateDoubleVec3(const RotationAxis, Rotatee: RDoubleVec3; Angle: Single): RDoubleVec3;
+var
+  rotationAxisNorm, rotateeBaseNorm, rotateeTipNorm: RVec3;
+  rotationQuaternion, conjugateQuaternion: RVec3;
+  rotatedBase, rotatedTip: RVec3;
+begin
+  // Normalize vectors
+  rotationAxisNorm := NormalizeVec3(RotationAxis.Tip - RotationAxis.Base);
+  rotateeBaseNorm := NormalizeVec3(Rotatee.Base - RotationAxis.Base);
+  rotateeTipNorm := NormalizeVec3(Rotatee.Tip - RotationAxis.Base);
+
+  // Calculate rotation quaternion
+  rotationQuaternion := RotateVec3(rotateeBaseNorm, rotationAxisNorm, Angle);
+
+  // Calculate conjugate quaternion
+  conjugateQuaternion.x := -rotationQuaternion.x;
+  conjugateQuaternion.y := -rotationQuaternion.y;
+  conjugateQuaternion.z := -rotationQuaternion.z;
+
+  // Rotate the base and tip
+  rotatedBase := RotateVec3(rotateeBaseNorm, rotationAxisNorm, Angle);
+  rotatedTip := RotateVec3(rotateeTipNorm, rotationAxisNorm, Angle);
+
+  // Convert back to original space
+  Result.Base := rotatedBase + RotationAxis.Base;
+  Result.Tip := rotatedTip + RotationAxis.Base;
+end;
+
 
 
 end.
