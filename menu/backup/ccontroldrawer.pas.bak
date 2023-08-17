@@ -67,6 +67,7 @@ begin
   if bChecked then
   begin
     glColor3f(0.2, 0.5, 0.2);
+    glLineWidth(txtscale);
     glBegin(GL_LINES);
     DrawLine(FinalPos.x, FinalPos.y, FinalPos.x + tempCBSize, FinalPos.y + tempCBSize, txtscale / 2);
     DrawLine(FinalPos.x, FinalPos.y + tempCBSize, FinalPos.x + tempCBSize, FinalPos.y, txtscale / 2);

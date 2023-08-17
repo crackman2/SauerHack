@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Windows, gl,
   { my stuff }
-  Main, GlobalVars, GlobalObjects, CPlayer, CAimbot, CESP, CTeleportAllEnemiesToYou, CNoclip, CMenuMain,
+  Main, GlobalVars, GlobalObjects, GlobalOffsets, CPlayer, CAimbot, CESP, CTeleportAllEnemiesToYou, CNoclip, CMenuMain,
   CFlagStealer;
 var
   SBuffers:DWORD;
@@ -151,13 +151,19 @@ end;
 { -> GlobalVars unit contains Objects that need to be initialized            }
 { -> We should only need to do it once, so we do it here                     }
 procedure InitGlobalObjects(); stdcall;
+var
+  CheckBoxStrings:array of String;
+  MaxStringLength, i:Cardinal;
 begin
+  g_offset_SauerbratenBase := GetModuleHandle('sauerbraten.exe');
+
   g_Player:= TPlayer.Create(0);
   g_Aimer := TAimbot.Create(g_Player);
   g_ESP   := TESP.Create(g_Player);
   g_TATY  := TTeleAETY.Create(g_Player);
   g_FlagStealer:= TFlagStealer.Create(g_Player);
   g_Noclip:= TNoclip.Create();
+
 
   { ---------------------- Initial Values for Pointers --------------------- }
   { -> mostly used for the TMenu object, so that's why it's here             }
@@ -166,13 +172,22 @@ begin
   g_EnableESP := 1;
   g_EnableNoclipping := 1;
   g_EnableLockAim := 1;
-  EnableMenu := PByte(GetModuleHandle('sauerbraten.exe') + $30D0E8);
+  g_EnableMenu := PByte(g_offset_SauerbratenBase + g_offset_MenuState);
   //uptodate 09/08/2023
   g_MenuInitialSetup := 1;
-  g_MenuPosX := 50;
-  g_MenuPosY := 50;
 
-  SetLength(g_MenuPointers, 7);
+  SetLength(g_MenuPointers, 8);
+  SetLength(CheckBoxStrings, 8);
+
+  CheckBoxStrings[0]:='Enable ESP';
+  CheckBoxStrings[1]:='Enable Aimbot';
+  CheckBoxStrings[2]:='Enable Lockaim';
+  CheckBoxStrings[3]:='Enable Noclipping';
+  CheckBoxStrings[4]:='Enable Teleport all to you';
+  CheckBoxStrings[5]:='Enable autocapture flag';
+  CheckBoxStrings[6]:='Enable Triggerbot';
+  CheckBoxStrings[7]:='Enable FrameShot (requires lockaim)';
+
 
   g_MenuPointers[0] := @g_EnableESP;
   g_MenuPointers[1] := @g_EnableAimbot;
@@ -181,7 +196,17 @@ begin
   g_MenuPointers[4] := @g_EnableTATY;
   g_MenuPointers[5] := @g_EnableFlagSteal;
   g_MenuPointers[6] := @g_EnableTriggerbot;
-  g_Menu  := TMenu.Create(g_MenuPosX, g_MenuPosY, 426, 209, 'SauerHack Reloaded', 3, g_MenuPointers);
+  g_MenuPointers[7] := @g_EnableFrameShot;
+
+  MaxStringLength:=0;
+
+  for i:=0 to High(CheckBoxStrings) do begin
+    if MaxStringLength < Length(CheckBoxStrings[i]) then MaxStringLength:= Length(CheckBoxStrings[i]);
+  end;
+
+  g_Menu  := TMenu.Create(0, 0, 15 + MaxStringLength * 5, 8 * Length(g_MenuPointers), 'SauerHack Reloaded', 2.5, g_MenuPointers, CheckBoxStrings);
+
+
 end;
 
 end.

@@ -8,13 +8,12 @@ uses
   Classes, SysUtils,
   { my stuff }
   CPlayer, CAimbot, CESP, CTeleportAllEnemiesToYou, CNoclip, CMenuMain,
-  CFlagStealer
-  ;
+  CFlagStealer;
 
 var
   { -------------------------------- Objects ------------------------------- }
   { -> Objects used to be created and destroyed every frame                  }
-  { -> Let's not do that. Also made it hard to store any information         }
+  { -> Let's not do that.                                                    }
   g_Player: TPlayer;
   g_Aimer : TAimbot;
   g_ESP   : TESP;

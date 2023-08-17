@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Windows, gl,
-  CPlayer, CAimbot, DrawText;
+  CPlayer, CAimbot, DrawText, GlobalOffsets;
 
 type
   TEnArr = array[1..32] of TPlayer;
@@ -64,7 +64,7 @@ end;
 procedure TTeleAETY.TeleportAllEnemiesInfrontOfYou(); stdcall;
 var
   i: cardinal;
-  viewp: array[0..3] of GLint;
+  viewp: array[0..3] of GLint = (0,0,0,0);
 begin
   i := 1;
   while i <= plrcnt do
@@ -89,7 +89,7 @@ function TTeleAETY.IsTeamBased(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^; //uptodate 2023/08/13
+  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + g_offset_TeamValue)^; //uptodate 2023/08/13
   case (TeamValue) of
     0: Result := False;
     1: Result := False;

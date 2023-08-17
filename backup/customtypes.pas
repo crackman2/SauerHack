@@ -61,11 +61,11 @@ begin
   Result.z := a.z - b.z;
 end;
 
-operator -(const a, b: RVec3): RVec3;
+operator +(const a, b: RVec3): RVec3;
 begin
-  Result.x := a.x - b.x;
-  Result.y := a.y - b.y;
-  Result.z := a.z - b.z;
+  Result.x := a.x + b.x;
+  Result.y := a.y + b.y;
+  Result.z := a.z + b.z;
 end;
 
 

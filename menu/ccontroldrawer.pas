@@ -64,19 +64,24 @@ begin
   FinalPos.x := pos.x + parent^.pos.x;
   FinalPos.y := pos.y + parent^.pos.y;
 
+  glLineWidth(txtscale);
+
   if bChecked then
   begin
     glColor3f(0.2, 0.5, 0.2);
+
     glBegin(GL_LINES);
     DrawLine(FinalPos.x, FinalPos.y, FinalPos.x + tempCBSize, FinalPos.y + tempCBSize, txtscale / 2);
     DrawLine(FinalPos.x, FinalPos.y + tempCBSize, FinalPos.x + tempCBSize, FinalPos.y, txtscale / 2);
     glEnd();
   end;
 
-  glColor3f(0.4, 0.4, 0.4);
+    glColor3f(0.4, 0.4, 0.4);
   DrawBox(Finalpos.y, Finalpos.x, Finalpos.y + tempCBSize, Finalpos.x + tempCBSize, txtscale );
   glxDrawString(FinalPos.x + tempCBSize + tempCBSize / 2, FinalPos.y +
     (txtscale / 2), txt, txtscale, True);
+
+
 end;
 
 

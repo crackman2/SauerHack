@@ -5,7 +5,11 @@ unit CNoclip;
 interface
 
 uses
-  Classes, SysUtils, Windows, Math, DrawText, gl;
+  Classes, SysUtils, Windows, Math, DrawText, gl, GlobalVars,
+
+  { my stuff }
+
+  GlobalOffsets;
 
 type
 
@@ -13,6 +17,7 @@ type
 
   TNoclip = class
     constructor Create;
+    procedure Poll; stdcall;
     procedure PollControls; stdcall;
     procedure NOPFalling(State1Kill0Fix: boolean); stdcall;
     procedure ZeroVelocities(); stdcall;
@@ -40,6 +45,9 @@ type
     SpeedFast: single;
     SpeedSlow: single;
     SpeedCurrent: single;
+
+    bEnableNoclip:Boolean;
+    bNoclipButtonPressed:Boolean;
   end;
 
 implementation
@@ -49,20 +57,19 @@ implementation
 constructor TNoclip.Create;
 var
   Original: Pointer;
-  FPS: Pointer;
 begin
   { ------- Setup Pointers To Writiable Player Positon ------- }
   { -> not the same as the one in the entity list              }
   { -> has some implications for taty          ..or mabye not  }
-  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $317110); //uptodate 2023/08/12
-  addposx := Pointer(Original^) + $30;
-  addposy := addposx + $4;
-  addposz := addposx + $8;
-  addvelx := Pointer(Original^) + $0C;
-  addvely := Pointer(Original^) + $10;
-  addvelz := Pointer(Original^) + $14;
-  addcamx := addposx + $C;
-  addcamy := addposx + $10;
+  Original := Pointer(g_offset_SauerbratenBase + g_offset_EntityList); //uptodate 2023/08/12
+  addposx := PPointer(Pointer(Original^) + 0)^ + g_offset_Player_PosXW; // 0 indexes the local player
+  addposy := PPointer(Pointer(Original^) + 0)^ + g_offset_Player_PosYW;
+  addposz := PPointer(Pointer(Original^) + 0)^ + g_offset_Player_PosZW;
+  addvelx := PPointer(Pointer(Original^) + 0)^ + g_offset_Player_VelXW;
+  addvely := PPointer(Pointer(Original^) + 0)^ + g_offset_Player_VelYW;
+  addvelz := PPointer(Pointer(Original^) + 0)^ + g_offset_Player_VelZW;
+  addcamx := PPointer(Pointer(Original^) + 0)^ + g_offset_Player_CamXW;
+  addcamy := PPointer(Pointer(Original^) + 0)^ + g_offset_Player_CamYW;
 
   posx := addposx;
   posy := addposy;
@@ -73,18 +80,56 @@ begin
   camx := addcamx;
   camy := addcamy;
 
-  { -------- Init Variables -------- }
-  FPS := Pointer(GetModuleHandle('sauerbraten.exe') + $39A644); //uptodate 2023/08/12
-  SpeedNormal := 200 / PInteger(FPS)^;
-  SpeedFast := SpeedNormal * 3;
-  SpeedSlow := SpeedNormal / 3;
-  SpeedCurrent := SpeedNormal;
+
+end;
+
+{ ---------------------------------- Poll ---------------------------------- }
+{ -> is executed every frame by MainFunc                                     }
+{ -> handles the 'V' hotkey to enable and disable noclip and also checks     }
+{    the menu setting g_EnableNoclipping                                     }
+{ -> includes a mechanism to prevent spamming                                }
+procedure TNoclip.Poll; stdcall;
+begin
+    if (GetAsyncKeyState(VK_V) <> 0) and (not Self.bNoclipButtonPressed) and
+    (not Self.bEnableNoclip) and (g_EnableNoclipping = 1) then
+  begin
+    Self.bEnableNoclip := True;
+    Self.bNoclipButtonPressed := True;
+  end;
+
+  if (GetAsyncKeyState(VK_V) <> 0) and (not Self.bNoclipButtonPressed) and
+    (Self.bEnableNoclip) then
+  begin
+    Self.bEnableNoclip := False;
+    Self.bNoclipButtonPressed := True;
+  end;
+
+  if (GetAsyncKeyState(VK_V) = 0) then
+    Self.bNoclipButtonPressed := False;
+
+  if Self.bEnableNoclip then
+  begin
+    Self.PollControls;
+    Self.NOPFalling(True);
+    Self.ZeroVelocities();
+  end
+  else
+  begin
+    Self.NOPFalling(False);
+  end;
 end;
 
 procedure TNoclip.PollControls; stdcall;
 var
-  viewp: array [0..3] of Glint;
+  viewp: array [0..3] of Glint = (0,0,0,0);
+  FPS: Pointer;
 begin
+  FPS := Pointer(g_offset_SauerbratenBase + g_offset_FPS); //uptodate 2023/08/12
+  SpeedNormal := 200 / PInteger(FPS)^;
+  SpeedFast := SpeedNormal * 3;
+  SpeedSlow := SpeedNormal / 3;
+  SpeedCurrent := SpeedNormal;
+
   if GetAsyncKeyState(VK_LSHIFT) <> 0 then
     SpeedCurrent := SpeedFast;
   if GetAsyncKeyState(VK_LCONTROL) <> 0 then
@@ -99,6 +144,7 @@ begin
     MovePlayer('D');
   if GetAsyncKeyState(VK_SPACE) <> 0 then
     MovePlayer('U');
+
 
   glColor3f(0.8, 0.8, 0.8);
   glGetIntegerv(GL_VIEWPORT, viewp);
@@ -116,19 +162,17 @@ var
   OriginalCodeZ: array [0..2] of byte = ($D8, $6B, $20); //uptodate 2023/08/13
   OriginalCodeZDrift: array [0..2] of byte = ($89, $45, $38); //uptodate 2023/08/13
   OriginalCodeXY: array [0..1] of byte = ($D8, $CA);     //uptodate 2023/08/13
-  SauerBase: Pointer;
   PosWriter: Pointer;
   TheKiller: PByte;
   Garbage: DWORD;
   i: cardinal;
 begin
-  Sauerbase := Pointer(GetModuleHandle('sauerbraten.exe'));
 
 
   if State1Kill0Fix = False then
   begin //Fixing code
     { ---- Z Axis ---- }
-    PosWriter := Pointer(SauerBase + $A5EC0);  //uptodate 2023/08/13
+    PosWriter := Pointer(g_offset_SauerbratenBase + $A5EC0);  //uptodate 2023/08/13
     VirtualProtect(PosWriter, 3, PAGE_EXECUTE_READWRITE, Garbage);
     TheKiller := PosWriter;
     for i := 0 to 2 do
@@ -137,7 +181,7 @@ begin
     end;
 
     { - Z Axis Drift - }
-    PosWriter := Pointer(SauerBase + $AE610);  //uptodate 2023/08/13
+    PosWriter := Pointer(g_offset_SauerbratenBase + $AE610);  //uptodate 2023/08/13
     VirtualProtect(PosWriter, 3, PAGE_EXECUTE_READWRITE, Garbage);
     TheKiller := PosWriter;
     for i := 0 to 2 do
@@ -146,7 +190,7 @@ begin
     end;
 
     { ---- X Axis ---- }
-    PosWriter := Pointer(SauerBase + $A59FC);   //uptodate 2023/08/13
+    PosWriter := Pointer(g_offset_SauerbratenBase + $A59FC);   //uptodate 2023/08/13
     TheKiller := PosWriter;
     for i := 0 to 1 do
     begin
@@ -154,7 +198,7 @@ begin
     end;
 
     { ---- Y Axis ---- }
-    PosWriter := Pointer(SauerBase + $A5A0C);   //uptodate 2023/08/13
+    PosWriter := Pointer(g_offset_SauerbratenBase + $A5A0C);   //uptodate 2023/08/13
     TheKiller := PosWriter;
     for i := 0 to 1 do
     begin
@@ -221,6 +265,7 @@ begin
       posy^ := posy^ + (sin((camx^ + 90) / 57.2958) * SpeedCurrent) *
         (1.57079576 -  (abs((camy^ / 57.2958))));
       posz^ := posz^ + (sin((camy^ / 57.2958)) * SpeedCurrent);
+
     end;
     'A':
     begin

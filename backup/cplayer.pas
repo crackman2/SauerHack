@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Windows,
-  CustomTypes;
+  CustomTypes, GlobalOffsets;
 
 type
 
@@ -72,7 +72,7 @@ begin
   { -> $29CD34 is the offset from sauerbraten.exe to the EntityList          }
   {    Pointer                                                               }
   { -> Index determines which entry in the list should be read               }
-  EntityList := Pointer(GetModuleHandle('sauerbraten.exe') + $3C9AD0);  //uptodate 2023/08/12
+  EntityList := Pointer(GetModuleHandle('sauerbraten.exe') + g_offset_EntityList);  //uptodate 2023/08/12
   List := Pointer(EntityList^);
   PlayerBase := Pointer(Pointer(List + Index * $4)^);
 
@@ -100,19 +100,19 @@ begin
     { -> this is the position located at the feet of the player as           }
     {    opposed to the actual camera position (specifically Z)              }
     {    but this doesn't really matter because you can't duck in this game  }
-    pos.x := PSingle(PlayerBase + $0)^;
-    pos.y := PSingle(PlayerBase + $4)^;
-    pos.z := PSingle(PlayerBase + $8)^;
+    pos.x := PSingle(PlayerBase + g_offset_player_posxR)^;
+    pos.y := PSingle(PlayerBase + g_offset_player_posyR)^;
+    pos.z := PSingle(PlayerBase + g_offset_player_poszR)^;
 
-    cam.x  := PSingle(PlayerBase + $3C)^;
-
+    cam.x  := PSingle(PlayerBase + g_offset_player_camxW)^;
+    cam.y  := PSingle(PlayerBase + g_offset_player_camyW)^;
 
     { ----------------------------- Team String ---------------------------- }
     { -> reading the Team name to differentiate between enemies and friends  }
     {    $354 is the offset to team string                                   }
     { -> cycle through all chars of the string until we hit the null         }
     {    termination                                                         }
-    TeamStringPointer := Pointer(PlayerBase + $34C); //fuck this //uptodate 2023/08/14 old $354
+    TeamStringPointer := Pointer(PlayerBase + g_offset_player_teamstring); //fuck this //uptodate 2023/08/14 old $354
     TeamStringCounter := 0;
     TeamStringLength := 0;
     while PChar(TeamStringPointer)[TeamStringCounter] <> char(0) do
@@ -129,7 +129,7 @@ begin
     { -> reading the playername to display on ESP                            }
     { -> cycle through all chars of the string until we hit the null         }
     {    termination                                                         }
-    PlayerNamePointer := Pointer(PlayerBase + $248); //fuck this //uptodate 2023/08/14 old $250
+    PlayerNamePointer := Pointer(PlayerBase + g_offset_player_namestring); //fuck this //uptodate 2023/08/14 old $250
     PlayerNameCounter := 0;
     PlayerNameStringLength := 0;
     while PChar(PlayerNamePointer)[PlayerNameCounter] <> char(0) do
@@ -143,30 +143,29 @@ begin
 
 
 
-
     { -------------------------- Enemy Related Data ------------------------ }
     if Index > 0 then
     begin
       { ---------------------------- Read Health --------------------------- }
       { -> relevant for target selection                                     }
       { -> offset from playerbase = $154                                    }
-      hp := PInteger(PlayerBase + $154)^; //uptodate 2023/08/14 old $15C
+      hp := PInteger(PlayerBase + g_offset_player_health)^; //uptodate 2023/08/14 old $15C
 
 
       { ------------------------------ Read CN ----------------------------- }
       { -> client number                                                     }
       { -> relevant for identification                                       }
       { -> offset from playerbase = $1B4                                     }
-      ClientNumber := PDWORD(PlayerBase + $1B4)^; // UNKNOWN 2023/08/14 i'll just leave it for now
+      ClientNumber := PDWORD(PlayerBase + g_offset_player_clientnumber)^; // UNKNOWN 2023/08/14 i'll just leave it for now
 
 
       { -------------------------- Read Spectating ------------------------- }
       { -> relevant for target selection                                     }
       { -> offset from playerbase = $77                                      }
-      if PBYTE(PlayerBase + $77)^ = $5 then   //uptodate 2023/08/14 old $15C
+      if PBYTE(PlayerBase + g_offset_player_spectating)^ = $5 then   //uptodate 2023/08/14 old $15C
         IsSpectating := True;
-    end; // Enemy Related Data
-  end; // if Playerbase <> 0
+    end;
+  end;
 end;
 
 procedure TPlayer.SetCamera(camH: single; camV: single); stdcall;
@@ -184,9 +183,9 @@ begin
   {    offset $216454 is a pointer to this struct. $3C is the offset to the  }
   {    horizontal camera angle and the vertical one is right next to it      }
 
-  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $317110 );  //uptodate 2023/08/12
-  addCamH := Pointer(Original^) + $3C;
-  addCamV := addcamH + $4;
+  Original := Pointer(g_offset_SauerbratenBase + g_offset_EntityList );  //uptodate 2023/08/12
+  addCamH := PPointer(Pointer(Original^) + 0)^ + g_offset_Player_CamXW; //0 indexes the local player
+  addCamV := PPointer(Pointer(Original^) + 0)^ + g_offset_Player_CamYW;
 
   addPSingleCamH := addCamH;
   addPSingleCamV := addCamV;
@@ -194,18 +193,18 @@ begin
   addPSingleCamH^ := camH;
 end;
 
-procedure TPlayer.SetPos(x: single; y: single; z: single);
+procedure TPlayer.SetPos(x: single; y: single; z: single); //cant work
 begin
-  PSingle(PlayerBase + $0)^ := x;
-  PSingle(PlayerBase + $4)^ := y;
-  PSingle(PlayerBase + $8)^ := z;
+  PSingle(PlayerBase + g_offset_Player_PosXR)^ := x;
+  PSingle(PlayerBase + g_offset_Player_PosYR)^ := y;
+  PSingle(PlayerBase + g_offset_Player_PosZR)^ := z;
 end;
 
 procedure TPlayer.SetPosAlt(x: single; y: single; z: single);
 begin
-  PSingle(PlayerBase + $30)^ := x;
-  PSingle(PlayerBase + $34)^ := y;
-  PSingle(PlayerBase + $38)^ := z;
+  PSingle(PlayerBase + g_offset_Player_PosXW)^ := x;
+  PSingle(PlayerBase + g_offset_Player_PosXW)^ := y;
+  PSingle(PlayerBase + g_offset_Player_PosXW)^ := z;
 end;
 
 procedure TPlayer.CalibrateMouse; stdcall;

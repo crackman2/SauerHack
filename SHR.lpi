@@ -27,7 +27,7 @@
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
     </RunParams>
-    <Units Count="17">
+    <Units Count="18">
       <Unit0>
         <Filename Value="SHR.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -112,6 +112,11 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="GlobalObjects"/>
       </Unit16>
+      <Unit17>
+        <Filename Value="globaloffsets.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GlobalOffsets"/>
+      </Unit17>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, windows,
 
-  CPlayer, CustomTypes, GlobalVars;
+  CPlayer, CustomTypes, GlobalVars, GlobalOffsets;
 
 
 type
@@ -39,17 +39,14 @@ implementation
 { -> easily detected by server scripts and admins                            }
 constructor TFlagStealer.Create(ply:TPlayer);
 var
-  Sauerbase:Pointer;
   Original:Pointer;
 begin
-  Sauerbase:=Pointer(GetModuleHandle('sauerbraten.exe'));
-
   FlipFlop:=PByte(g_cave + $700);
 
-  Original:=Pointer(Sauerbase + $29D200);
+  Original:=Pointer(g_offset_SauerbratenBase + $29D200);
   BlueFlagPointer:=Pointer(Original^) + $88;
 
-  Original:=Pointer(Sauerbase + $29D200);
+  Original:=Pointer(g_offset_SauerbratenBase + $29D200);
   RedFlagPointer:=Pointer(Original^) + $18;
 
   Self.ply:=ply;
@@ -81,7 +78,7 @@ function TFlagStealer.IsCTFMode(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^; //uptodate 2023/08/13
+  TeamValue := PBYTE(g_offset_SauerbratenBase + g_offset_TeamValue)^; //uptodate 2023/08/13
   case (TeamValue) of
     11: Result := True;
     12: Result := True;

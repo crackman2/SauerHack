@@ -8,8 +8,7 @@ uses
   Classes, SysUtils,
   { my stuff }
   CPlayer, CAimbot, CESP, CTeleportAllEnemiesToYou, CNoclip, CMenuMain,
-  CFlagStealer
-  ;
+  CFlagStealer;
 
 var
   { -------------------------------- Objects ------------------------------- }

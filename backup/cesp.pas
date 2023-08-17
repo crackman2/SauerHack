@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, gl, glu, Windows,
-  CPlayer, DrawText, CustomTypes;
+  CPlayer, DrawText, CustomTypes, GlobalOffsets;
 
 type
 
@@ -29,9 +29,6 @@ type
     procedure Draw3DBox(Index: cardinal; lw: single); stdcall;
     procedure Draw3DCamXArrow(Index: cardinal; lw: single); stdcall;
     function GetDirectionVector(Origin:RVec3; CameraAngles:RVec2; Length:Single): RVec3;
-    function NormalizeVec3(const vec: RVec3): RVec3;
-    function RotateVec3(const vec: RVec3; const axis: RVec3; angle: Single): RVec3;
-    function RotateDoubleVec3(const RotationAxis, Rotatee: RDoubleVec3; Angle: Single): RDoubleVec3;
 
 
 
@@ -379,7 +376,7 @@ var
   ViewMatrx: MVPmatrix;
 begin
 
-  VMBase := GetModuleHandle('sauerbraten.exe') + $399080;
+  VMBase := g_offset_SauerbratenBase + g_offset_ViewMatrix;
 
   for i := 0 to 15 do
   begin
@@ -420,7 +417,7 @@ function TESP.IsTeamBased(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^;
+  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + g_offset_TeamValue)^;
   //uptodate 2023/08/13
   case (TeamValue) of
     0: Result := False;
@@ -455,30 +452,23 @@ var
   { ------------------------------ 3D Elements ----------------------------- }
   ArrowBase: RVec3;
   ArrowTip: RVec3;
-  ArrowBlades: array [0..15] of RVec3;
-  ArrowBladeAngles: array [0..15] of RVec2;
 
 
   { ---------------------------- 2D Projections ---------------------------- }
   sArrowBase: RVec2;
   sArrowTip: RVec2;
-  sArrowBlades: array [0..15] of RVec2;
 
-  { ------------------------------ Black Magic ----------------------------- }
-  RotationAxis:RDoubleVec3;
-  Rotatee:RDoubleVec3;
-  ResultStorage:RDoubleVec3;
 
   { ------------------------------- Settings ------------------------------- }
   Length: single = 10;
-  BladeAngle:Single = 1;
-  BladeDistFrombase:Single = 9.5;
+  //BladeAngle:Single = 1;
+  //BladeDistFrombase:Single = 9.5;
 
   { ------------------------------ Error Check ----------------------------- }
   bFailed: boolean = False;
 
   { --------------------------------- Misc --------------------------------- }
-  i:Cardinal=0;
+  //i:Cardinal=0;
 begin
   { -------------------------------- Zeroing ------------------------------- }
   ArrowBase:=RVec3_Create(0,0,0);
@@ -486,9 +476,6 @@ begin
 
   sArrowBase:=RVec2_Create(0,0);
   sArrowTip:=RVec2_Create(0,0);
-
-  for i:=0 to High(sArrowBlades) do sArrowBlades[i]:=RVec2_Create(0,0);
-  for i:=0 to High(ArrowBladeAngles) do ArrowBladeAngles[i]:=RVec2_Create(0,0);
 
   { ----------------------------- Basic Values ----------------------------- }
   ArrowBase := en[Index].pos;
@@ -502,22 +489,6 @@ begin
   { ------------------------- Arrow Blade Vectors -------------------------- }
 
 
-  RotationAxis.Base:=ArrowBase;
-  RotationAxis.Tip:=ArrowTip;
-
-  Rotatee.Base:=ArrowBase;
-  ArrowBladeAngles[0]:=en[Index].cam;
-  ArrowBladeAngles[0].x+=BladeAngle;
-  Rotatee.Tip:=GetDirectionVector(ArrowBase, ArrowBladeAngles[0] , Length);
-
-  for i:=0 to High(ArrowBlades) do begin
-    ResultStorage:=RotateDoubleVec3(RotationAxis,Rotatee,(360/High(ArrowBlades))*i);
-    ArrowBlades[i]:=ResultStorage.Tip;
-  end;
-
-
-
-
   if not glW2S(ArrowBase) then
     bFailed := True
   else
@@ -527,21 +498,11 @@ begin
   else
     sArrowTip := scrcord;
 
-  for i:=0 to High(ArrowBlades) do begin
-    if not glW2S(ArrowBlades[i]) then begin
-       bFailed := True
-    end else begin
-       sArrowBlades[i]:=scrcord;
-    end;
-  end;
-
 
   if not bFailed then
   begin
     glColor3f(0.8, 1, 1);
     DrawLine(sArrowBase.x, sArrowBase.y, sArrowTip.x, sArrowTip.y, lw * 2);
-    for i:=0 to High(ArrowBlades) do
-    DrawLine(sArrowTip.x,sArrowTip.y,sArrowBlades[i].x,sArrowBlades[i].y,lw*2);
   end;
 end;
 
@@ -557,58 +518,6 @@ begin
   Result.x += cos((CameraAngles.x + 90) / 57.2958) * Length * (1.57079576 - (abs((CameraAngles.y / 57.2958))));
   Result.y += sin((CameraAngles.x + 90) / 57.2958) * Length * (1.57079576 - (abs((CameraAngles.y / 57.2958))));
   Result.z += sin((CameraAngles.y / 57.2958));
-end;
-
-
-function NormalizeVec3(const vec: RVec3): RVec3;
-var
-  len: Single;
-begin
-  len := sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
-  Result.x := vec.x / len;
-  Result.y := vec.y / len;
-  Result.z := vec.z / len;
-end;
-
-function RotateVec3(const vec: RVec3; const axis: RVec3; angle: Single): RVec3;
-var
-  sinHalfAngle, cosHalfAngle: Single;
-begin
-  angle := angle * Pi / 180; // Convert angle to radians
-  sinHalfAngle := Sin(angle * 0.5);
-  cosHalfAngle := Cos(angle * 0.5);
-
-  Result.x := (cosHalfAngle * vec.x) + (sinHalfAngle * (axis.y * vec.z - axis.z * vec.y));
-  Result.y := (cosHalfAngle * vec.y) + (sinHalfAngle * (axis.z * vec.x - axis.x * vec.z));
-  Result.z := (cosHalfAngle * vec.z) + (sinHalfAngle * (axis.x * vec.y - axis.y * vec.x));
-end;
-
-function RotateDoubleVec3(const RotationAxis, Rotatee: RDoubleVec3; Angle: Single): RDoubleVec3;
-var
-  rotationAxisNorm, rotateeBaseNorm, rotateeTipNorm: RVec3;
-  rotationQuaternion, conjugateQuaternion: RVec3;
-  rotatedBase, rotatedTip: RVec3;
-begin
-  // Normalize vectors
-  rotationAxisNorm := NormalizeVec3(RotationAxis.Tip - RotationAxis.Base);
-  rotateeBaseNorm := NormalizeVec3(Rotatee.Base - RotationAxis.Base);
-  rotateeTipNorm := NormalizeVec3(Rotatee.Tip - RotationAxis.Base);
-
-  // Calculate rotation quaternion
-  rotationQuaternion := RotateVec3(rotateeBaseNorm, rotationAxisNorm, Angle);
-
-  // Calculate conjugate quaternion
-  conjugateQuaternion.x := -rotationQuaternion.x;
-  conjugateQuaternion.y := -rotationQuaternion.y;
-  conjugateQuaternion.z := -rotationQuaternion.z;
-
-  // Rotate the base and tip
-  rotatedBase := RotateVec3(rotateeBaseNorm, rotationAxisNorm, Angle);
-  rotatedTip := RotateVec3(rotateeTipNorm, rotationAxisNorm, Angle);
-
-  // Convert back to original space
-  Result.Base := rotatedBase + RotationAxis.Base;
-  Result.Tip := rotatedTip + RotationAxis.Base;
 end;
 
 

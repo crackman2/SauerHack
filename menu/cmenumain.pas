@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, gl, windows,
-  GlobalVars, cmenuwindow, ccontroldrawer, CustomTypes, DrawText;
+  GlobalVars, GlobalOffsets, cmenuwindow, ccontroldrawer, CustomTypes, DrawText;
 
 type
 
@@ -14,12 +14,13 @@ type
 
   TMenu = class
     constructor Create(PosX: single; PosY: single; DimX: single; DimY: single;
-      Title: ansistring; Scale: single; const AMenuPointersA: array of Pointer);
+      Title: ansistring; Scale: single; const AMenuPointersA: array of Pointer; const CheckBoxStrings: array of String);
     procedure DrawMenu;
     procedure DrawCursor;
     procedure PollControls;
     procedure InitMain;
     procedure CheckDragWindow(mx:Single; my:Single);
+    procedure SetPos(x:Single; y:Single);
 
   public
     mainwin: TWindow;
@@ -29,11 +30,20 @@ type
     menuscale: single;
     MouseX:Single;
     MouseY:Single;
-    CheckBoxes:array [0..6] of TCheckbox;
-    CheckBoxStrings:array [0..6] of String;
+    CheckBoxes:array of TCheckbox;
+    CheckBoxStrings:array of String;
     CheckBoxNumber:Cardinal;
     dwLibMikModBase:DWORD;
     MenuPointersA:array of Pointer;
+
+    bMReleaser:Boolean;
+    bDragging:Boolean;
+    MenuPosX:Single;
+    MenuPosY:Single;
+    MouseXOri:Single;
+    MouseYOri:Single;
+
+    bInitialSetup:Boolean;
   end;
 
 
@@ -42,67 +52,71 @@ implementation
 { TMenu }
 
 constructor TMenu.Create(PosX: single; PosY: single; DimX: single; DimY: single;
-  Title: ansistring; Scale: single; const AMenuPointersA: array of Pointer);
+  Title: ansistring; Scale: single; const AMenuPointersA: array of Pointer; const CheckBoxStrings: array of String);
 begin
+  MenuPosX  := posx;
+  MenuPosy  := posy;
   menupos.x := posx;
   menupos.y := posy;
-  menudim.x := dimx;
-  menudim.y := dimy;
+  menudim.x := dimx * Scale;
+  menudim.y := dimy * Scale + 13 * Scale;
   menutitle := title;
   menuscale := Scale;
+
   
   SetLength(Self.MenuPointersA,Length(AMenuPointersA));
   Move(AMenuPointersA[0],Self.MenuPointersA[0],Length(AMenuPointersA) * SizeOf(Pointer));
+
+  SetLength(Self.CheckBoxes,Length(AMenuPointersA));
+
+  SetLength(Self.CheckBoxStrings,Length(CheckBoxStrings));
+  Move(CheckBoxStrings[0],Self.CheckBoxStrings[0],Length(CheckBoxStrings) * SizeOf(Pointer));
+
   CheckBoxNumber:=High(CheckBoxes);
 
   InitMain;
 end;
 
+
 procedure TMenu.InitMain();
 var
   i:Cardinal;
 begin
-  mainwin := TWindow.Create(menupos, menudim, menutitle);
-
-  CheckBoxStrings[0]:='Enable ESP';
-  CheckBoxStrings[1]:='Enable Aimbot';
-  CheckBoxStrings[2]:='Enable Lockaim';
-  CheckBoxStrings[3]:='Enable Noclipping';
-  CheckBoxStrings[4]:='Enable Teleport all to you';
-  CheckBoxStrings[5]:='Enable autocapture flag';
-  CheckBoxStrings[6]:='Enable Triggerbot';
+  mainwin := TWindow.Create(menupos, menudim, menutitle, menuscale);
 
   for i:= 0 to CheckBoxNumber do begin
-      CheckBoxes[i]:= TCheckbox.Create(@mainwin, 10, 40+((8*menuscale)*i), CheckBoxStrings[i], menuscale, True, MenuPointersA[i]);
+      CheckBoxes[i]:= TCheckbox.Create(@mainwin, 3*menuscale, (13*menuscale)+((8*menuscale)*i), CheckBoxStrings[i], menuscale, True, MenuPointersA[i]);
   end;
 end;
 
+
 procedure TMenu.CheckDragWindow(mx: Single; my: Single);
 begin
-  if g_Dragging=1 then begin
-     g_MenuPosX:=mx-g_MouseXOri;
-     g_MenuPosY:=my-g_MouseYOri;
+  if bDragging then begin
+     MenuPosX:=mx-MouseXOri;
+     MenuPosY:=my-MouseYOri;
   end
   else if (mx > menupos.x) and (mx < menupos.x + menudim.x) and
           (my > menupos.y) and (my < menupos.y + mainwin.TitleBarHeight) then
   begin
-    g_Dragging:=1;
-    g_MouseXOri:=mx - g_MenuPosX;
-    g_MouseYOri:=my - g_MenuPosY;
+    bDragging:=True;
+    MouseXOri:=mx - MenuPosX;
+    MouseYOri:=my - MenuPosY;
   end;
 
-  if g_MReleaser=0 then g_Dragging:=0;
+  if not bMReleaser then bDragging:=False;
 end;
+
 
 procedure TMenu.DrawMenu;
 var
   i:Cardinal;
 begin
-  menupos.x:=g_MenuPosX;
-  menupos.y:=g_MenuPosY;
+  menupos.x:=MenuPosX;
+  menupos.y:=MenuPosY;
 
-  mainwin.pos.x:=g_MenuPosX;
-  mainwin.pos.y:=g_MenuPosY;
+  mainwin.pos.x:=MenuPosX;
+  mainwin.pos.y:=MenuPosY;
 
   mainwin.DrawWindow;
   for i:=0 to CheckBoxNumber do begin
@@ -110,6 +124,7 @@ begin
   end;
   DrawCursor;
 end;
+
 
 procedure TMenu.DrawCursor;
 var
@@ -125,10 +140,10 @@ var
   i:Cardinal;
   FPS:Pointer;
 begin
-  FPS := Pointer(GetModuleHandle('sauerbraten.exe') + $39A644);      //uptodate
+  FPS := Pointer(g_offset_SauerbratenBase+ g_offset_FPS);      //uptodate
   glGetIntegerv(GL_VIEWPORT, viewp);
-  PMouseX := Pointer(GetModuleHandle('sauerbraten.exe') + $2A6010);  //uptodate
-  PMouseY := Pointer(GetModuleHandle('sauerbraten.exe') + $2A600C);  //uptodate
+  PMouseX := Pointer(g_offset_SauerbratenBase + g_offset_MouseCursorPosX);  //uptodate
+  PMouseY := Pointer(g_offset_SauerbratenBase + g_offset_MouseCursorPosY);  //uptodate
   MouseX:=PSingle(PMouseX)^*viewp[2];
   MouseY:=PSingle(PMouseY)^*viewp[3];
 
@@ -152,6 +167,7 @@ begin
   glEnd();
 end;
 
+
 procedure TMenu.PollControls;
 var
   Clicked:Boolean=False;
@@ -161,18 +177,18 @@ var
   PMouseY: Pointer;
 begin
   glGetIntegerv(GL_VIEWPORT, viewp);
-  PMouseX := Pointer(GetModuleHandle('sauerbraten.exe') + $2A6010);  //uptodate
-  PMouseY := Pointer(GetModuleHandle('sauerbraten.exe') + $2A600C);  //uptodate
+  PMouseX := Pointer(g_offset_SauerbratenBase + g_offset_MouseCursorPosX);  //uptodate
+  PMouseY := Pointer(g_offset_SauerbratenBase + g_offset_MouseCursorPosY);  //uptodate
   MouseX:=PSingle(PMouseX)^*viewp[2];
   MouseY:=PSingle(PMouseY)^*viewp[3];
 
-  if (GetAsyncKeyState($01) <> 0) and (g_MReleaser=0) then begin
+  if (GetAsyncKeyState($01) <> 0) and (not bMReleaser) then begin
     Clicked:=True;
-    g_MReleaser:=1;
+    bMReleaser:=True;
   end;
 
   if (not (GetAsyncKeyState($01) <> 0)) and (not Clicked) then begin
-    g_MReleaser:=0;
+    bMReleaser:=False;
   end;
 
   if Clicked then begin
@@ -183,5 +199,13 @@ begin
 
   CheckDragWindow(MouseX,MouseY);
 end;
+
+
+procedure TMenu.SetPos(x:Single; y:Single);
+begin
+  Self.MenuPosX:=x;
+  Self.MenuPosY:=y;
+end;
+
 
 end.

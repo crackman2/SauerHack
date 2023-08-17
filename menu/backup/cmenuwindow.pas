@@ -13,7 +13,7 @@ type
   { TWindow }
 
   TWindow = class
-    constructor Create(Position: RVec2; Dimensions: RVec2; WindowTitle: ansistring);
+    constructor Create(Position: RVec2; Dimensions: RVec2; WindowTitle: ansistring; scale:Single);
     procedure DrawWindow;
 
   public
@@ -21,6 +21,7 @@ type
     dim: RVec2;
     title: ansistring;
       TitleBarHeight: single;
+    scale: Single;
   end;
 
   PTWindow = ^TWindow;
@@ -29,12 +30,13 @@ implementation
 
 { TWindow }
 
-constructor TWindow.Create(Position: RVec2; Dimensions: RVec2; WindowTitle: ansistring);
+constructor TWindow.Create(Position: RVec2; Dimensions: RVec2; WindowTitle: ansistring; scale:Single);
 begin
   pos := Position;
   dim := Dimensions;
   title := WindowTitle;
-  TitleBarHeight:=35;
+
+  TitleBarHeight:=10*scale;
 end;
 
 procedure TWindow.DrawWindow;

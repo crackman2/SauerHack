@@ -6,28 +6,9 @@ interface
 
 uses
   Classes, SysUtils, Windows, gl, Math,
-  CPlayer;
+  CPlayer, GlobalVars, CustomTypes, GlobalOffsets;
 
 type
-  MVPmatrix = array[0..15] of single;
-
-  RVec4 = record
-    x: single;
-    y: single;
-    z: single;
-    w: single;
-  end;
-
-  RVec3 = record
-    x: single;
-    y: single;
-    z: single;
-  end;
-
-  RVec2 = record
-    x: single;
-    y: single;
-  end;
   TEnArr = array[1..32] of TPlayer;
   PTEnArr = ^TEnArr;
 
@@ -36,7 +17,9 @@ type
   TAimbot = class
 
     constructor Create(ply: TPlayer);
+    procedure Poll;
     procedure SetEnemyArray(en: TEnArr);
+    procedure SetPlayerCount(plrcnt: cardinal);
     function glW2S(plypos: RVec3): boolean; stdcall;
     function IsTeamBased(): boolean; stdcall;
     function GetBestTarget(plrcnt: cardinal): integer; stdcall;
@@ -49,6 +32,17 @@ type
     Fog: Pointer;
     ply: TPlayer;
     en: TEnArr;
+
+    plrcnt:Cardinal;
+
+    CurrentBestTarget: integer;
+
+    bLockAim:Boolean;
+    bReleasedRBM:Boolean;
+
+    FrameShotReturner:Boolean;
+    FrameShotSavedCameraAngles:RVec2;
+
   end;
 
 
@@ -65,17 +59,101 @@ implementation
 constructor TAimbot.Create(ply: TPlayer);
 var
   ShootByteBase: Pointer;
-  Sauerbase: Pointer;
 begin
-  Sauerbase := Pointer(GetModuleHandle('sauerbraten.exe'));
   Self.ply := ply;
 
-  ShootByteBase := Pointer(Sauerbase + $3C9ADC);    //uptodate 2023/08/13
-  ShootByteBase := Pointer(cardinal(ShootByteBase^) + $1D8); //uptodate 2023/08/13
+  ShootByteBase := Pointer(g_offset_SauerbratenBase + g_offset_ShootByte_0);    //uptodate 2023/08/13
+  ShootByteBase := Pointer(cardinal(ShootByteBase^) + g_offset_ShootByte_1); //uptodate 2023/08/13
   ShootByte := PByte(ShootByteBase);
-  Fog := Pointer(Sauerbase + $398EF8);
+  Fog := Pointer(g_offset_SauerbratenBase + g_offset_Fog);
 end;
 
+{ ---------------------------------- Poll ---------------------------------- }
+{ -> is executed every frame by MainFunc                                     }
+{ -> checks menu settings g_EnableAimbot and g_EnableLockAim and             }
+{    g_EnableTriggerbot                                                      }
+{ -> Triggers functions to select targets, aim and triggger                  }
+{ -> includes a mechanism to prevent spamming                                }
+procedure TAimbot.Poll;
+begin
+
+  if FrameShotReturner then begin
+     Self.ply.SetCamera(FrameShotSavedCameraAngles.x,FrameShotSavedCameraAngles.y);
+     FrameShotReturner:=False;
+  end;
+
+  Self.ShootByte^ := 0;
+  if (g_EnableAimbot = 1) and (g_EnableLockAim = 1) then
+  begin
+    if not (GetAsyncKeyState($1) <> 0) then
+      Self.ShootByte^ := $0;
+    if (GetAsyncKeyState($2) <> 0) then
+    begin
+      if Self.bReleasedRBM then
+      begin
+        Self.bLockAim:=True;
+        Self.CurrentBestTarget := Self.GetBestTarget(Self.plrcnt);
+        Self.bReleasedRBM:=False;
+      end;
+    end
+    else
+    begin
+      Self.bReleasedRBM:=True;
+    end;
+
+    if (Self.bLockAim) and (not Self.bReleasedRBM) then
+    begin
+      if en[Self.CurrentBestTarget] <> nil then
+      begin
+        if en[Self.CurrentBestTarget].hp <= 0 then
+        begin
+          Self.bLockAim:=False;
+        end
+        else
+        begin
+          if GetAsyncKeyState(VK_O) <> 0 then
+          begin
+            //Debug Output. Show current targets pointer
+            // MessageBox(0, PChar('Current Target: 0x' +
+            //   IntToHex(DWORD(Enemy[CurrentBestTarget].PlayerBase), 8)), 'e', 0);
+          end;
+          if g_EnableFrameShot = 1 then begin
+             Self.bLockAim:=False;
+             FrameShotSavedCameraAngles:=Self.ply.cam;
+             FrameShotReturner:=True;
+          end;
+          Self.Aim(Self.CurrentBestTarget);
+          Self.AutoTrigger();
+
+        end;
+      end
+      else
+      begin
+        Self.bLockAim:=False;
+      end;
+    end
+    else
+    begin
+      Self.bLockAim:=False;
+    end;
+  end;
+
+  if (g_EnableAimbot = 1) and (g_EnableLockAim = 0) then
+  begin
+    if not (GetAsyncKeyState($1) <> 0) then
+      Self.ShootByte^ := $0;
+    if (GetAsyncKeyState($2) <> 0) then
+    begin
+      Self.Aim(Self.GetBestTarget(Self.plrcnt));
+      if (g_EnableTriggerbot = 1) then
+        Self.AutoTrigger();
+    end;
+  end;
+
+
+  if (g_EnableTriggerbot = 1) and (GetAsyncKeyState($2) <> 0) then
+    Self.AutoTrigger();
+end;
 
 { ------------------------------ SetEnemyArray ----------------------------- }
 { -> en must be set before anything can be done, really                      }
@@ -83,6 +161,14 @@ end;
 procedure TAimbot.SetEnemyArray(en: TEnArr);
 begin
   Self.en:=en;
+end;
+
+{ ------------------------------ SetPlayerCount ----------------------------- }
+{ -> plrcnt must be set before anything can be done, really                   }
+{ -> the playercount is found during the main loop                            }
+procedure TAimbot.SetPlayerCount(plrcnt: cardinal);
+begin
+  Self.plrcnt := plrcnt;
 end;
 
 { ----------------------------- World to Screen ---------------------------- }
@@ -99,7 +185,7 @@ var
   ViewMatrx: MVPmatrix;
 begin
 
-  VMBase := GetModuleHandle('sauerbraten.exe') + $399080; //uptodate 2023/08/13
+  VMBase := g_offset_SauerbratenBase + g_offset_ViewMatrix; //uptodate 2023/08/13
   for i := 0 to 15 do
   begin
     ViewMatrx[i] := PSingle(VMBase + i * 4)^;
@@ -141,7 +227,7 @@ function TAimbot.IsTeamBased(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(cardinal(GetModuleHandle('sauerbraten.exe')) + $2A636C)^; //uptodate 2023/08/13
+  TeamValue := PBYTE(g_offset_SauerbratenBase + g_offset_TeamValue)^; //uptodate 2023/08/13
   case (TeamValue) of
     0: Result := False;
     1: Result := False;
@@ -244,18 +330,16 @@ end;
 
 { ------------------------ AutoTrigger / Triggerbot ------------------------ }
 { -> Checks PixelColor in the center of the screen. if it is equal           }
-{    RGB($00,$FF,$02) it triggers using the ShootByte                        }
+{    RGB($00,$FF,$00) ($0A tolerance) it triggers using the ShootByte        }
 { -> change enemy textures to be entirely green ($00FF00), ingame they       }
 {    should show up as $00FF02 of some reason. make sure to disable any      }
 {    shading, postprocessing or anything else that shades the models. they   }
 {    have to be fullbright. also disable ragdolling and dead player  models  }
 {    in general to avoid misfiring                                           }
-{ -> reliability is iffy at best because fog messes with colors but those    }
-{    can be disabled too (HAS BEEN ADDED)                                    }
 procedure TAimbot.AutoTrigger(); stdcall;
 var
   pixel: array[0..3] of byte;
-  viewp: array[0..3] of GLint;
+  viewp: array[0..3] of GLint = (0,0,0,0);
 begin
   glGetIntegerv(GL_VIEWPORT, viewp);
   glReadPixels(round(viewp[2] / 2), round(viewp[3] / 2), 1, 1, GL_RGB,
