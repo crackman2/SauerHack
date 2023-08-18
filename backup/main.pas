@@ -17,6 +17,14 @@ var
   Enemy: array[1..32] of TPlayer;
   PlayerCount: integer;
 
+
+  { ------------------------------- ViewPort ------------------------------- }
+  { -> used to detect changes in resolution and move the menu accordingly    }
+  newviewp: array[0..3] of GLint = (0,0,0,0);
+  viewp: array[0..3] of GLint = (0,0,0,0);
+
+
+
 procedure MainFunc();
 procedure GetPlayerCount();
 procedure PollDebug();
@@ -35,15 +43,39 @@ var
   i: cardinal; //for loop counter
   OldRC: HGLRC;
 
-  viewp: array[0..3] of GLint = (0,0,0,0);
+
 begin
   { ------------------------ Prepare OpenGL Drawing ------------------------ }
-  { -> OldRC is the current context used by the game. Apparently it   }
+  { -> OldRC is the current context used by the game. Apparently it          }
   {    is impossible to use in it's current state for our purposes, so we    }
   {    just create a new one                                                 }
   { -> caveHDC is the device context, grabbed frome the wglSwapBuffers call  }
   { -> caveNewRC is a new device context that was created when the hook code }
   {    was run the first time                                                }
+
+  { -------- Resolution Change ------- }
+  { -> if resolution of the game       }
+  {    changes, a new RC with the      }
+  {    correct resolution is created   }
+  {    and used                        }
+  if Assigned(g_Menu) then begin
+    if g_Menu.bInitialSetup then begin
+      glGetIntegerv(GL_VIEWPORT, newviewp);
+      if (viewp[2] <> newviewp[2]) or (viewp[3] <> newviewp[3]) then begin
+        OldRC := wglGetCurrentContext;
+        wglMakeCurrent(0,0);
+        wglDeleteContext(g_NewRC);
+        g_NewRC:=wglCreateContext(g_HDC);
+        wglMakeCurrent(g_HDC,g_NewRC);
+        glViewport(0, 0, newviewp[2], newviewp[3]);
+        wglMakeCurrent(g_HDC, OldRC);
+        glGetIntegerv(GL_VIEWPORT, viewp);
+        g_Menu.bInitialSetup:=False;
+      end;
+    end;
+  end;
+
+  { --- Prepare Rendering Context ---- }
   OldRC := wglGetCurrentContext;
   wglMakeCurrent(g_HDC, g_NewRC);
   glEnter2DDrawingMode;
@@ -93,9 +125,10 @@ begin
   { -------- Menu ------- }
   if Assigned(g_Menu) and not g_Menu.bInitialSetup then begin
     glGetIntegerv(GL_VIEWPORT, viewp);
-    g_Menu.SetPos(viewp[2] - g_Menu.menudim.x, 0);
+    g_Menu.SetPos(viewp[2] - g_Menu.menudim.x, 0); //move to top right corner
     g_Menu.bInitialSetup:=True;
   end;
+
 
 
 
@@ -105,7 +138,7 @@ begin
   { -> stops aiming when the enemy is dead                                   }
   { -> reclick hotkey to aim at next taget                                   }
   { -> this should really be its own function...                             }
-  if Assigned(g_Aimer) then g_Aimer.Poll;
+  if Assigned(g_Aimer) then g_Aimer.Poll else ShowMissingObjectError('g_FlagStealer');
 
 
 
@@ -121,10 +154,12 @@ begin
   { -> CURRENTLY BROKEN                                                      }
   { -> teleport between flags                                                }
   { -> infinite points                                                       }
+  if Assigned(g_FlagStealer) then begin
   if (GetAsyncKeyState(VK_P) <> 0) and (g_EnableFlagSteal = 1) then
   begin
-    //FlagStealer.SpamTeleport();             COMMENTED FOR DEBUG
+    g_FlagStealer.SpamTeleport();
   end;
+  end else ShowMissingObjectError('g_FlagStealer');
 
 
   { -------------------------------- Noclip -------------------------------- }

@@ -5,28 +5,25 @@ unit CFlagStealer;
 interface
 
 uses
-  Classes, SysUtils, windows,
-
+  Classes, SysUtils, Windows,
   CPlayer, CustomTypes, GlobalVars, GlobalOffsets;
-
 
 type
 
   { TFlagStealer }
 
   TFlagStealer = class
-    Constructor Create(ply:TPlayer);
+    constructor Create(ply: TPlayer);
     procedure SpamTeleport();
 
   private
     function IsCTFMode(): boolean; stdcall;
-    public
-    RedFlagPointer:Pointer;
-    BlueFlagPointer:Pointer;
-    FlipFlop:PByte;
-    PlyPos:PRVec3;
-
-    ply:TPlayer;
+  public
+    EvilFlagPointer: Pointer;
+    GoodFlagPointer: Pointer;
+    FlipFlop: boolean;
+    PlyPos: PRVec3;
+    ply: TPlayer;
   end;
 
 implementation
@@ -37,37 +34,37 @@ implementation
 { -> Reads the position of both flags in ctf modes                           }
 { -> Teleports the player back and forth to both positions                   }
 { -> easily detected by server scripts and admins                            }
-constructor TFlagStealer.Create(ply:TPlayer);
-var
-  Original:Pointer;
+constructor TFlagStealer.Create(ply: TPlayer);
 begin
-  FlipFlop:=PByte(g_cave + $700);
+  Self.ply := ply;
 
-  Original:=Pointer(g_offset_SauerbratenBase + $29D200);
-  BlueFlagPointer:=Pointer(Original^) + $88;
-
-  Original:=Pointer(g_offset_SauerbratenBase + $29D200);
-  RedFlagPointer:=Pointer(Original^) + $18;
-
-  Self.ply:=ply;
 end;
 
 { ------------------------------ SpamTeleport ------------------------------ }
 { -> FlipFlop decides which place to teleport to next                        }
 procedure TFlagStealer.SpamTeleport();
+var
+  Original: Pointer;
 begin
-  if IsCTFMode() then begin
-    if FlipFlop^=0 then begin
-      FlipFlop^:=1;
-      ply.SetPos(  PSingle(RedFlagPointer + $0)^,
-                   PSingle(RedFlagPointer + $4)^,
-                   PSingle(RedFlagPointer + $8)^ + 15);
+  Original := Pointer(g_offset_SauerbratenBase + g_offset_FlagStealerBase);
+  GoodFlagPointer := PPointer(Original)^ + g_offset_FlagGood;
+  EvilFlagPointer := PPointer(Original)^ + g_offset_FlagEvil;
+
+  if IsCTFMode() then
+  begin
+    if FlipFlop then
+    begin
+      FlipFlop := False;
+      ply.SetPosAlt(PSingle(EvilFlagPointer + $0)^,
+        PSingle(EvilFlagPointer + $4)^,
+        PSingle(EvilFlagPointer + $8)^ + 15);
     end
-    else begin
-      FlipFlop^:=0;
-       ply.SetPos( PSingle(RedFlagPointer + $0)^,
-                   PSingle(RedFlagPointer + $4)^,
-                   PSingle(RedFlagPointer + $8)^ + 15);
+    else
+    begin
+      FlipFlop := True;
+      ply.SetPosAlt(PSingle(GoodFlagPointer + $0)^,
+        PSingle(GoodFlagPointer + $4)^,
+        PSingle(GoodFlagPointer + $8)^ + 15);
     end;
   end;
 end;
@@ -78,7 +75,8 @@ function TFlagStealer.IsCTFMode(): boolean; stdcall;
 var
   TeamValue: byte;
 begin
-  TeamValue := PBYTE(g_offset_SauerbratenBase + g_offset_TeamValue)^; //uptodate 2023/08/13
+  TeamValue := PBYTE(g_offset_SauerbratenBase + g_offset_TeamValue)^;
+  //uptodate 2023/08/13
   case (TeamValue) of
     11: Result := True;
     12: Result := True;
@@ -90,4 +88,3 @@ begin
 end;
 
 end.
-

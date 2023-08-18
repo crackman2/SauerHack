@@ -72,7 +72,7 @@ begin
   { -> $29CD34 is the offset from sauerbraten.exe to the EntityList          }
   {    Pointer                                                               }
   { -> Index determines which entry in the list should be read               }
-  EntityList := Pointer(GetModuleHandle('sauerbraten.exe') + g_offset_EntityList);  //uptodate 2023/08/12
+  EntityList := Pointer(g_offset_SauerbratenBase + g_offset_EntityList);  //uptodate 2023/08/12
   List := Pointer(EntityList^);
   PlayerBase := Pointer(Pointer(List + Index * $4)^);
 
@@ -203,8 +203,8 @@ end;
 procedure TPlayer.SetPosAlt(x: single; y: single; z: single);
 begin
   PSingle(PlayerBase + g_offset_Player_PosXW)^ := x;
-  PSingle(PlayerBase + g_offset_Player_PosXW)^ := y;
-  PSingle(PlayerBase + g_offset_Player_PosXW)^ := z;
+  PSingle(PlayerBase + g_offset_Player_PosyW)^ := y;
+  PSingle(PlayerBase + g_offset_Player_PoszW)^ := z;
 end;
 
 procedure TPlayer.CalibrateMouse; stdcall;

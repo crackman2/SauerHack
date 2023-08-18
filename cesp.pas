@@ -29,6 +29,7 @@ type
     procedure Draw3DBox(Index: cardinal; lw: single); stdcall;
     procedure Draw3DCamXArrow(Index: cardinal; lw: single); stdcall;
     function GetDirectionVector(Origin:RVec3; CameraAngles:RVec2; Length:Single): RVec3;
+    function MaxSingle(a:Single; b: Single): Single;
 
 
 
@@ -152,8 +153,7 @@ begin
 
             glColor3f(0.8, 0.8, 0.8);
 
-            glxDrawString(pHead.x, pHead.y + (dHeight / 4),
-              PChar(en[i].PlayerNameString), abs(dHeight / 80), False);
+            glxDrawString(pHead.x, pHead.y + (dHeight / 4), PChar(en[i].PlayerNameString), MaxSingle(abs(dHeight / 80) ,1.5), False);
             glDisable(GL_BLEND);
             glDisable(GL_LINE_SMOOTH);
           end;
@@ -452,17 +452,19 @@ var
   { ------------------------------ 3D Elements ----------------------------- }
   ArrowBase: RVec3;
   ArrowTip: RVec3;
+  ArrowBlade: array [0..1] of RVec3;
 
 
   { ---------------------------- 2D Projections ---------------------------- }
   sArrowBase: RVec2;
   sArrowTip: RVec2;
+  sArrowBlade: array [0..1] of RVec2;
 
 
   { ------------------------------- Settings ------------------------------- }
   Length: single = 10;
-  //BladeAngle:Single = 1;
-  //BladeDistFrombase:Single = 9.5;
+  BladeAngle:RVec2;
+  BladeDistFrombase:Single = 8;
 
   { ------------------------------ Error Check ----------------------------- }
   bFailed: boolean = False;
@@ -473,9 +475,15 @@ begin
   { -------------------------------- Zeroing ------------------------------- }
   ArrowBase:=RVec3_Create(0,0,0);
   ArrowTip:=RVec3_Create(0,0,0);
+  ArrowBlade[0]:=RVec3_Create(0,0,0);
+  ArrowBlade[1]:=RVec3_Create(0,0,0);
 
   sArrowBase:=RVec2_Create(0,0);
   sArrowTip:=RVec2_Create(0,0);
+  sArrowBlade[0]:=RVec2_Create(0,0);
+  sArrowBlade[1]:=RVec2_Create(0,0);
+
+
 
   { ----------------------------- Basic Values ----------------------------- }
   ArrowBase := en[Index].pos;
@@ -487,22 +495,42 @@ begin
 
 
   { ------------------------- Arrow Blade Vectors -------------------------- }
+  BladeAngle:=en[Index].cam;
+  ArrowBlade[0]:=GetDirectionVector(ArrowBase,BladeAngle,BladeDistFrombase);
+  ArrowBlade[1]:=GetDirectionVector(ArrowBase,BladeAngle,BladeDistFrombase);
+
+  ArrowBlade[0].z+=3;
+  ArrowBlade[1].z-=3;
+
 
 
   if not glW2S(ArrowBase) then
     bFailed := True
   else
     sArrowBase := scrcord;
+
   if not glW2S(ArrowTip) then
     bFailed := True
   else
     sArrowTip := scrcord;
 
+  if not glW2S(ArrowBlade[0]) then
+    bFailed:=True
+  else
+    sArrowBlade[0]:=scrcord;
+
+  if not glW2S(ArrowBlade[1]) then
+    bFailed:=True
+  else
+    sArrowBlade[1]:=scrcord;
+
 
   if not bFailed then
   begin
     glColor3f(0.8, 1, 1);
-    DrawLine(sArrowBase.x, sArrowBase.y, sArrowTip.x, sArrowTip.y, lw * 2);
+    DrawLine(sArrowBase.x, sArrowBase.y, sArrowTip.x, sArrowTip.y, lw);
+    DrawLine(sArrowTip.x, sArrowTip.y,sArrowBlade[0].x,sArrowBlade[0].y,lw * 2);
+    DrawLine(sArrowTip.x, sArrowTip.y,sArrowBlade[1].x,sArrowBlade[1].y,lw * 2);
   end;
 end;
 
@@ -518,6 +546,15 @@ begin
   Result.x += cos((CameraAngles.x + 90) / 57.2958) * Length * (1.57079576 - (abs((CameraAngles.y / 57.2958))));
   Result.y += sin((CameraAngles.x + 90) / 57.2958) * Length * (1.57079576 - (abs((CameraAngles.y / 57.2958))));
   Result.z += sin((CameraAngles.y / 57.2958));
+end;
+
+
+function TESP.MaxSingle(a:Single; b: Single): Single;
+begin
+  if a > b then
+    Result := a
+  else
+    Result := b;
 end;
 
 

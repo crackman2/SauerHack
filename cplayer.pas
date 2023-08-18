@@ -203,8 +203,8 @@ end;
 procedure TPlayer.SetPosAlt(x: single; y: single; z: single);
 begin
   PSingle(PlayerBase + g_offset_Player_PosXW)^ := x;
-  PSingle(PlayerBase + g_offset_Player_PosXW)^ := y;
-  PSingle(PlayerBase + g_offset_Player_PosXW)^ := z;
+  PSingle(PlayerBase + g_offset_Player_PosYW)^ := y;
+  PSingle(PlayerBase + g_offset_Player_PosZW)^ := z;
 end;
 
 procedure TPlayer.CalibrateMouse; stdcall;

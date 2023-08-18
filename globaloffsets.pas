@@ -102,12 +102,26 @@ const
   g_offset_ShootByte_0:          longword = $3C9ADC;
   g_offset_ShootByte_1:          longword = $1D8;
 
+
+
   { ------------------------------- TeamValue ------------------------------ }
   { -> PByte(sauerbraten.exe + $2A636C)^                                     }
   { -> A Value that corresponds to a gamemode                                }
   { -> using a lookup table, it can be determined if the current gamemode is }
   {    team based                                                            }
   g_offset_TeamValue:            longword = $2A636C;
+
+
+
+  { ---------------------------- Flags Position ---------------------------- }
+  { -> PSingle((sauerbraten.exe + $3C6C70) + $18)^ for PosX, other Axis are  }
+  {    4 Byte intervals (that being Y and Z)                                 }
+  { -> for CFlagStealer                                                      }
+  g_offset_FlagStealerBase:      longword = $3C6C70;
+  g_offset_FlagGood:             longword = $18;
+  g_offset_FlagEvil:             longword = $80;
+
+
 
 implementation
 

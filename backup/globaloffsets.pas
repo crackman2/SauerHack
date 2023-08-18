@@ -102,6 +102,8 @@ const
   g_offset_ShootByte_0:          longword = $3C9ADC;
   g_offset_ShootByte_1:          longword = $1D8;
 
+
+
   { ------------------------------- TeamValue ------------------------------ }
   { -> PByte(sauerbraten.exe + $2A636C)^                                     }
   { -> A Value that corresponds to a gamemode                                }
@@ -111,42 +113,13 @@ const
 
 
 
-  {
-  ShootByteBase := Pointer(Sauerbase + $3C9ADC);    //uptodate 2023/08/13
-  ShootByteBase := Pointer(cardinal(ShootByteBase^) + $1D8); //uptodate 2023/08/13
-  ShootByte := PByte(ShootByteBase);
-  }
-
-
-  {
-  VMBase := GetModuleHandle('sauerbraten.exe') + $399080; //uptodate 2023/08/13
-  for i := 0 to 15 do
-  begin
-    ViewMatrx[i] := PSingle(VMBase + i * 4)^;
-  end;
-  }
-
-
-
-
-
-  {
-  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $317110 );  //uptodate 2023/08/12
-  addCamH := Pointer(Original^) + $3C;
-  addCamV := addcamH + $4;
-  }
-
-   {
-  Original := Pointer(GetModuleHandle('sauerbraten.exe') + $3C9AD0); //uptodate 2023/08/12
-  addposx := Pointer(Pointer(Original^) + 0)^ + $30;
-  addposy := addposx + $4;
-  addposz := addposx + $8;
-  addvelx := Pointer(Original^) + $0C;
-  addvely := Pointer(Original^) + $10;
-  addvelz := Pointer(Original^) + $14;
-  addcamx := addposx + $C;
-  addcamy := addposx + $10;
-    }
+  { ---------------------------- Flags Position ---------------------------- }
+  { -> PSingle((sauerbraten.exe + $3C6C70) + $18)^ for PosX, other Axis are  }
+  {    4 Byte intervals (that being Y and Z)                                 }
+  { -> for CFlagStealer                                                      }
+  g_offset_FlagStealerBase:      longword = $3C6C70;
+  g_offset_FlagGood:             longword = $18;
+  g_offset_FlagGood:             longword = $80;
 
 
 
