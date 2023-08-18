@@ -153,7 +153,7 @@ begin
 
             glColor3f(0.8, 0.8, 0.8);
 
-            glxDrawString(pHead.x, pHead.y + (dHeight / 4), PChar(en[i].PlayerNameString), MaxSingl(abs(dHeight / 80) ,2), False);
+            glxDrawString(pHead.x, pHead.y + (dHeight / 4), PChar(en[i].PlayerNameString), MaxSingle(abs(dHeight / 80) ,1.5), False);
             glDisable(GL_BLEND);
             glDisable(GL_LINE_SMOOTH);
           end;

@@ -150,12 +150,12 @@ begin
 
             //DrawLine(pHead.x - (dWidth/2) + 4,pFeet.y, pHead.x - (dWidth/2) + 4, pHead.y - (((1.0 - (en^[i].hp / 100.0))*dheight)),abs(dHeight/80));//2d box
 
-
+            if uppercase(en[i].PlayerNameString) <> 'BOT' then begin
             glColor3f(0.8, 0.8, 0.8);
-
             glxDrawString(pHead.x, pHead.y + (dHeight / 4), PChar(en[i].PlayerNameString), MaxSingle(abs(dHeight / 80) ,1.5), False);
             glDisable(GL_BLEND);
             glDisable(GL_LINE_SMOOTH);
+            end;
           end;
         end;
       end
